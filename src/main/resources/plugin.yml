@@ -1,5 +1,10 @@
-name: MobWars
+name: CustomMinigame
 version: '1.0-SNAPSHOT'
 main: org.ilmiandluk.customMinigame.CustomMinigame
 api-version: '1.21'
+depend: [BetterModel, FastAsyncWorldEdit]
 author: IlmiZeroth, luk-chesnok
+commands:
+  tbhe:
+    description: Main plugin command
+    permission: cm.use

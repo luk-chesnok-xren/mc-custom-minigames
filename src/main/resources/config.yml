@@ -1,0 +1,8 @@
+structure:
+  base: "structures/base.schem"
+  militaryschool: "structures/militaryschool.schem"
+  mineshaft: "structures/mineshaft.schem"
+  sawmill: "structures/sawmill.schem"
+  plain: "structures/plain.schem"
+  forest: "structures/forest.schem"
+  hills: "structures/hills.schem"
