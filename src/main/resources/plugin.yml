@@ -1,0 +1,5 @@
+name: MobWars
+version: '1.0-SNAPSHOT'
+main: org.ilmiandluk.customMinigame.CustomMinigame
+api-version: '1.21'
+author: IlmiZeroth, luk-chesnok
