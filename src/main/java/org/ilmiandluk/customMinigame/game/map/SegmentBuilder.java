@@ -15,6 +15,7 @@ import org.bukkit.Location;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 
+import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class SegmentBuilder {
         Location loc = mapSegment.loc();
         AbstractStructure structure = mapSegment.structure();
         return CompletableFuture.supplyAsync(() -> {
-            File file = new File(plugin.getDataFolder().getPath() + "\\" + plugin.getConfigManager().getStructurePath(structure));
+            File file = new File(plugin.getDataFolder().getPath() + File.separator + plugin.getConfigManager().getStructurePath(structure));
 
             if (!file.exists()) {
                 plugin.getLogger().log(Level.SEVERE, plugin.getMessagesManager().getString("scheme.notfound") + file.getAbsolutePath());
