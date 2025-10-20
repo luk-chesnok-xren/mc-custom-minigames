@@ -4,7 +4,8 @@ main: org.ilmiandluk.customMinigame.CustomMinigame
 api-version: '1.21'
 depend: [BetterModel, FastAsyncWorldEdit]
 author: IlmiZeroth, luk-chesnok
+load: POSTWORLD
 commands:
-  tbhe:
-    description: Main plugin command
-    permission: cm.use
+  cmga:
+    description: Plugin command for admins
+    permission: cmg.admin

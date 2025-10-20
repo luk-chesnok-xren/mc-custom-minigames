@@ -1,44 +1,94 @@
 package org.ilmiandluk.customMinigame.admin;
 
-import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.map.Map;
+import org.ilmiandluk.customMinigame.game.map.MapController;
+import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 
 public class AdminExecutor implements CommandExecutor {
 
     private final CustomMinigame plugin;
+    private final ConfigurationManager messageManager;
 
     public AdminExecutor(CustomMinigame plugin) {
         this.plugin = plugin;
+        messageManager = CustomMinigame.getInstance().getMessagesManager();
     }
     /*
         Здесь будет обработчики для команды /cmga
-        Хочу сделать /cmga createmap <name> <size> <maxPlayers>
+        Хочу сделать /cmga createmap <name> <maxPlayers> <xSize> <zSize>
         которая будет создавать игровую карту на месте нахождения игрока sender.getLocation()
 
         Ну и дальше что-нибудь еще придумаем для админов.
         Скоро тут будут лежать обработчики для тестов (временно)
     */
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("Эта команда только для игроков!");
             return true;
         }
+        if(args.length < 1){
+            return sendHelpMessage(sender);
+        }
+        return switch (args[0].toLowerCase()) {
+            case "createmap" -> handleCreateMap(((Player) sender).getPlayer(), args);
+            case "createsign" -> handleCreateSign(((Player) sender).getPlayer(), args);
+            case "generate" -> handleGenerateMap(((Player) sender).getPlayer(), args);
+            default -> sendHelpMessage(sender);
+        };
+    }
+    private boolean sendHelpMessage(CommandSender sender){
+        for(String message: messageManager.getStringList("admin.help")){
+            sender.sendMessage(message);
+        }
+        return false;
+    }
 
-        Player player = (Player) sender;
-        Location loc = player.getLocation();
+    private boolean handleCreateSign(@Nullable Player player, @NotNull String @NotNull [] args) {
 
-        Map map = new Map("Test", loc, 10, 10, 10);
-        map.segmentInitialize();
+        return false;
+    }
 
-        player.sendMessage("§eНачинаю построение схемы...");
+    private boolean handleGenerateMap(@Nullable Player player, @NotNull String @NotNull [] args) {
+        if (args.length < 2) {
+            player.sendMessage(messageManager.getString("admin.generateMapUsage"));
+            return true;
+        }
+        String mapName = args[1];
+        Map thisMap = MapController.getMap(mapName);
+        if (thisMap == null) {
+            player.sendMessage(messageManager.getString("admin.generateMapUsage"));
+            return true;
+        }
+        thisMap.segmentInitialize();
         return true;
+    }
+
+    private boolean handleCreateMap(@Nullable Player player, @NotNull String @NotNull [] args) {
+        if (args.length < 5) {
+            player.sendMessage(messageManager.getString("admin.createMapUsage"));
+            return true;
+        }
+        String mapName = args[1];
+        int maxPlayers;
+        int xSize;
+        int zSize;
+        try{
+            maxPlayers = Integer.parseInt(args[2]);
+            xSize = Integer.parseInt(args[3]);
+            zSize = Integer.parseInt(args[4]);
+            MapController.createMap(mapName, player.getLocation(), maxPlayers, xSize, zSize);
+        }catch (Exception e){
+            player.sendMessage(messageManager.getString("admin.createMapUsage"));
+            return true;
+        }
+        return false;
     }
 }

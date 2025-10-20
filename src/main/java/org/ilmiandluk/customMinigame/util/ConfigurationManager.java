@@ -11,7 +11,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class ConfigurationManager {
     private final JavaPlugin plugin;
@@ -66,8 +69,10 @@ public class ConfigurationManager {
             plugin.saveResource(fileName, false);
         }
     }
-
-    private static String translateColors(String text) {
+    private String replacePlaceholders(String text){
+        return text != null ? text.replaceAll("%prefix%", getConfig().getString("prefix")): null;
+    }
+    private String translateColors(String text) {
         return text != null ? ChatColor.translateAlternateColorCodes('&', text) : null;
     }
     public void setupStructuresFolder() {
@@ -77,7 +82,7 @@ public class ConfigurationManager {
         }
     }
 
-    private void copyStructureIfMissing(String schemFileName) {
+    synchronized private void copyStructureIfMissing(String schemFileName) {
         File schemFile = new File(structuresFolder, schemFileName);
 
         if (!schemFile.exists()) {
@@ -105,13 +110,19 @@ public class ConfigurationManager {
     }
 
     public String getString(String path) {
-        return translateColors(getConfig().getString(path));
+        return translateColors(replacePlaceholders(getConfig().getString(path, path + " not found")));
     }
 
     public String getString(String path, String defaultValue) {
-        return translateColors(getConfig().getString(path, defaultValue));
+        return translateColors(replacePlaceholders(getConfig().getString(path, defaultValue)));
     }
 
+    public List<String> getStringList(String path) {
+       return getConfig().getStringList(path).stream()
+                .map(this::replacePlaceholders)
+                .map(this::translateColors)
+                .collect(Collectors.toList());
+    }
     public int getInt(String path) {
         return getConfig().getInt(path);
     }

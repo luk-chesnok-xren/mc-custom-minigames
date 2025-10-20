@@ -1,3 +1,14 @@
+prefix: "&7[&aCustomMinigame&7] "
+admin:
+  createMapUsage: "%prefix% &cИспользование: /cmga createmap <name> <maxPlayers> <xSize> <zSize>"
+  createSignUsage: "%prefix% &cИспользование: /cmga createsign"
+  generateMapUsage: "%prefix% &cИспользование: /cmga generate <name>"
+  help:
+    - '&8&m----------------&6&l %prefix% &8&m-------------'
+    - '&6/cmga &8- &7Вывести это сообщение'
+    - '&6/cmga createmap <name> <maxPlayers> <xSize> <zSize> &8- &7Создать новую карту'
+    - '&6/cmga generate <name> &8- &7Генерирует карту заново'
+    - '&8&m-------------------------------------'
 scheme:
-  notfound: "§cФайл схемы не найден: "
-  unformatted: "§cНеизвестный формат схемы! "
+  notfound: "&cФайл схемы не найден: "
+  unformatted: "&cНеизвестный формат схемы! "

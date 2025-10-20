@@ -2,7 +2,9 @@ package org.ilmiandluk.customMinigame;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.ilmiandluk.customMinigame.admin.AdminExecutor;
+import org.ilmiandluk.customMinigame.game.map.MapController;
 import org.ilmiandluk.customMinigame.game.map.SegmentBuilder;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 
@@ -37,9 +39,17 @@ public final class CustomMinigame extends JavaPlugin {
         this.configManager = new ConfigurationManager(this, "config.yml");
         this.messagesManager = new ConfigurationManager(this, "messages.yml");
         this.segmentBuilder = new SegmentBuilder(this);
+
         setInstance(this);
 
-        getCommand("tbhe").setExecutor(new AdminExecutor(this));
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                MapController.loadMapsFromFile();
+            }
+        }.runTaskLater(this, 20);
+
+        getCommand("cmga").setExecutor(new AdminExecutor(this));
         Bukkit.getLogger().log(Level.INFO, "[CustomMinigame] Plugin has been enabled!");
 
     }

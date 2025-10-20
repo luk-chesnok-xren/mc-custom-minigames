@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 
-public record MapSegment (
+record MapSegment (
     AbstractStructure structure,
     Location loc,
     Player owner
