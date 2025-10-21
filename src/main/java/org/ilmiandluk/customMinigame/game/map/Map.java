@@ -9,12 +9,10 @@ import org.ilmiandluk.customMinigame.game.structures.environment.Hills;
 import org.ilmiandluk.customMinigame.game.structures.environment.Plain;
 import org.ilmiandluk.customMinigame.game.structures.builds.Base;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Arrays;
-
+import java.util.ArrayList;
 // Map - связан с MapController. Только он может вызывать конструктор Map.
 // Но многие методы должны вызываться извне, они помечены как public.
 
@@ -61,48 +59,36 @@ public class Map {
         setUpBases();
     }
 
-    //ПОТОМ ИМСПРАВЛЮ
+    //ляютая обосрамба, потом доделаю
     public void setUpBases() {
         List<int[]> targetSegments = new ArrayList<>();
-
         for (int x = 0; x < xSize - 1; x++) {
-            for(int z = 0; z < zSize; z++) {
-                boolean isTargetSegment = (x == 0 || z == 0 || x == xSize-2 || z == zSize - 2);
-
-                if (isTargetSegment) targetSegments.add(new int[] {x, z});
+            for (int z = 0; z < zSize; z++) {
+                boolean isTargetSegment = (x == 0 || z == 0 || x == xSize - 2 || z == zSize - 2);
+                if (isTargetSegment) targetSegments.add(new int[]{x, z});
             }
         }
-
         int counter = 0;
-
-        while(counter <= maxPlayers) {
+        while (counter <= 3) {
             int[] posCandidate = targetSegments.get(random.nextInt(targetSegments.size()));
-
-            int bX = posCandidate[0]; int bZ = posCandidate[1];
-
-            if(segments[bX][bZ].structure() instanceof Base) {
+            int bX = posCandidate[0];
+            int bZ = posCandidate[1];
+            if (segments[bX][bZ].structure() instanceof Base) {
                 final int bx = bX;
                 final int bz = bZ;
-
                 targetSegments.removeIf(arr -> Arrays.equals(arr, new int[]{bx, bz}));
                 continue;
             }
-            //Я думал размер базы 2 на 2 поэтому....
-            // после дохуя часов думания мог насрать в логике
-            //ФИКСАНУ ПОТОМ.
             for (; bX < 2; bX++) {
                 for (; bZ < 2; bZ++) {
                     final int bx = bX;
                     final int bz = bZ;
-
                     Location loc = mapLocation.clone().add(bX * 20 + 1, 0, bZ * 20 + 1);
                     segments[bX][bZ] = new MapSegment(new Base(), loc, null);
                     segmentBuilder.buildSegment(segments[bX][bz]);
-
                     targetSegments.removeIf(arr -> Arrays.equals(arr, new int[]{bx, bz}));
                 }
             }
-
             counter++;
         }
     }
