@@ -48,7 +48,7 @@ public class Map {
         for(int x = 0; x < xSize; x++){
             for(int z = 0; z < zSize; z++){
                 AbstractStructure structure = getRandomEnvStructure();
-                Location loc = mapLocation.clone().add(x*20+1,0,z*20+1).add(-1,0,18);
+                Location loc = mapLocation.clone().add(x*20+1,0,z*20+1);
                 segments[x][z] = new MapSegment(structure, loc, null);
                 segmentBuilder.buildSegment(segments[x][z]);
             }
