@@ -90,9 +90,9 @@ public class Map {
         //ОЧЕНЬ ИНТЕЛЛЕКТУАЛЬНО СОБИРАЕМ КООРДИНАТЫ ПО ПЕРИМЕТРУ
 
         for (int z = 0; z <= zSize - bSize; z++) targetCandidates.add(new int[]{0, z});
-        for (int x = 1; x <= xSize - bSize; x++) targetCandidates.add(new int[]{x, 0});
-        for (int z = zSize - bSize; z > 0; z--) targetCandidates.add(new int[]{zSize-bSize, z});
-        for (int x = xSize - bSize - 1; x > 0; x--) targetCandidates.add(new int[]{x, xSize-bSize});
+        for (int x = 1; x <= xSize - bSize; x++) targetCandidates.add(new int[]{x, xSize-bSize});
+        for (int z = zSize - bSize - 1; z >= 0; z--) targetCandidates.add(new int[]{zSize-bSize, z});
+        for (int x = xSize - bSize - 1; x > 0; x--) targetCandidates.add(new int[]{x, 0});
 
         int step = targetCandidates.size() / players.size();
         int placed  = 0;
