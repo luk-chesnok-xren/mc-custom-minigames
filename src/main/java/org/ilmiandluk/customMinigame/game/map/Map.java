@@ -55,8 +55,9 @@ public class Map {
                 segmentBuilder.buildSegment(segments[x][z]);
             }
         }
-
-        setUpBases();
+//        Location loc = mapLocation.clone().add(1,0,1);
+//        segmentBuilder.buildSegment(new MapSegment(new Base(), loc, null));
+        //setUpBases();
     }
 
     //ляютая обосрамба, потом доделаю
