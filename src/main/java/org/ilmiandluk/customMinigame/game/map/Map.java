@@ -1,5 +1,6 @@
 package org.ilmiandluk.customMinigame.game.map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.ilmiandluk.customMinigame.CustomMinigame;
@@ -7,9 +8,12 @@ import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 import org.ilmiandluk.customMinigame.game.structures.environment.Forest;
 import org.ilmiandluk.customMinigame.game.structures.environment.Hills;
 import org.ilmiandluk.customMinigame.game.structures.environment.Plain;
+import org.ilmiandluk.customMinigame.game.structures.builds.Base;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 
 // Map - связан с MapController. Только он может вызывать конструктор Map.
 // Но многие методы должны вызываться извне, они помечены как public.
@@ -42,6 +46,10 @@ public class Map {
         this.xSize = xSize;
         this.zSize = zSize;
         segments = new MapSegment[xSize][zSize];
+
+        System.out.println(
+                maxPlayers
+        );
     }
     // Я конченный, бегите
     public void segmentInitialize(){
@@ -53,7 +61,54 @@ public class Map {
                 segmentBuilder.buildSegment(segments[x][z]);
             }
         }
+
+        setUpBases(2);
+
+        //логи чисто для меня
+        //как видим оно нормально расставляет все в самом массиве segments
+        //но на деле я не могу понять где у схемы находится origin
+        // поэтому он не может вставить нормально в саму карту в майнкрафте
+        for(int x = 0; x < xSize; x++){
+            String a = "";
+            for(int z = 0; z < zSize; z++){
+                if(segments[x][z].structure() instanceof Base) a += "b";
+                else a += ".";
+            }
+
+            Bukkit.getLogger().log(Level.INFO,  a);
+        }
     }
+
+    private void setUpBases(int bSize) {
+        List<int[]> targetCandidates = new ArrayList<>();
+
+        //ОЧЕНЬ ИНТЕЛЛЕКТУАЛЬНО СОБИРАЕМ КООРДИНАТЫ ПО ПЕРИМЕТРУ
+
+        for (int z = 0; z <= zSize - 2; z++) targetCandidates.add(new int[]{0, z});
+        for (int x = 1; x <= xSize - bSize; x++) targetCandidates.add(new int[]{x, xSize-bSize});
+        for (int z = zSize - bSize - 1; z >= 0; z--) targetCandidates.add(new int[]{zSize-bSize, z});
+        for (int x = xSize - bSize - 1; x > 0; x--) targetCandidates.add(new int[]{x, 0});
+
+        int step = targetCandidates.size() / maxPlayers;
+        int placed  = 0;
+
+        for (int i = 0; i < targetCandidates.size() && placed < maxPlayers; i += step) {
+            int [] currentCandidate = targetCandidates.get(i);
+            int X = currentCandidate[0]; int Z = currentCandidate[1];
+
+            Location loc = mapLocation.clone().add(X*40+1,0,Z*40+1);
+            for (int x = X; x < X+bSize; x++) {
+                for (int z = Z; z < Z+bSize; z++) {
+                    segments[x][z] = new MapSegment(new Base(), loc, null);
+                }
+            }
+
+            segmentBuilder.buildSegment(segments[X][Z]);
+
+            placed++;
+        }
+    }
+
     private AbstractStructure getRandomEnvStructure() {
         int rand = random.nextInt(100);
         if (rand < 50) return new Plain();      // 50%

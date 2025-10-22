@@ -29,7 +29,7 @@ public class SegmentBuilder {
     }
 
     public CompletableFuture<Boolean> buildSegment(MapSegment mapSegment) {
-        Location loc = mapSegment.loc().add(-1,0,18);
+        Location loc = mapSegment.loc().add(-1,    0,18);
         AbstractStructure structure = mapSegment.structure();
         return CompletableFuture.supplyAsync(() -> {
             File file = new File(plugin.getDataFolder().getPath() + File.separator + plugin.getConfigManager().getStructurePath(structure));
