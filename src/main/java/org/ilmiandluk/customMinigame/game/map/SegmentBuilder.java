@@ -14,6 +14,8 @@ import com.sk89q.worldedit.session.ClipboardHolder;
 import org.bukkit.Location;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
+import org.ilmiandluk.customMinigame.game.structures.builds.Base;
+import org.ilmiandluk.customMinigame.game.structures.builds.MilitarySchool;
 
 import java.io.Console;
 import java.io.File;
@@ -29,8 +31,16 @@ public class SegmentBuilder {
     }
 
     public CompletableFuture<Boolean> buildSegment(MapSegment mapSegment) {
-        Location loc = mapSegment.loc().add(-1,    0,18);
         AbstractStructure structure = mapSegment.structure();
+        Location loc;
+        // Для структур 2 на 2 и структур 1 на 1 разное смещение
+        if (structure instanceof Base || structure instanceof MilitarySchool) {
+            loc = mapSegment.loc().add(-1,0,38);
+        }
+        else {
+            loc = mapSegment.loc().add(-1,0,18);
+        }
+
         return CompletableFuture.supplyAsync(() -> {
             File file = new File(plugin.getDataFolder().getPath() + File.separator + plugin.getConfigManager().getStructurePath(structure));
 
