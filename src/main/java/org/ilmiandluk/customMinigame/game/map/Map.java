@@ -46,9 +46,14 @@ public class Map {
         this.xSize = xSize;
         this.zSize = zSize;
         segments = new MapSegment[xSize][zSize];
-
+        this.players = new ArrayList<>();
+        {
+            for (int i = 0; i < 5; i++) {
+                players.add(null);
+            }
+        }
         System.out.println(
-                maxPlayers
+                players.size()
         );
     }
     // Я конченный, бегите
@@ -84,27 +89,25 @@ public class Map {
 
         //ОЧЕНЬ ИНТЕЛЛЕКТУАЛЬНО СОБИРАЕМ КООРДИНАТЫ ПО ПЕРИМЕТРУ
 
-        for (int z = 0; z <= zSize - 2; z++) targetCandidates.add(new int[]{0, z});
-        for (int x = 1; x <= xSize - bSize; x++) targetCandidates.add(new int[]{x, xSize-bSize});
-        for (int z = zSize - bSize - 1; z >= 0; z--) targetCandidates.add(new int[]{zSize-bSize, z});
-        for (int x = xSize - bSize - 1; x > 0; x--) targetCandidates.add(new int[]{x, 0});
+        for (int z = 0; z <= zSize - bSize; z++) targetCandidates.add(new int[]{0, z});
+        for (int x = 1; x <= xSize - bSize; x++) targetCandidates.add(new int[]{x, 0});
+        for (int z = zSize - bSize; z > 0; z--) targetCandidates.add(new int[]{zSize-bSize, z});
+        for (int x = xSize - bSize - 1; x > 0; x--) targetCandidates.add(new int[]{x, xSize-bSize});
 
-        int step = targetCandidates.size() / maxPlayers;
+        int step = targetCandidates.size() / players.size();
         int placed  = 0;
 
-        for (int i = 0; i < targetCandidates.size() && placed < maxPlayers; i += step) {
+        for (int i = 0; i < targetCandidates.size() && placed < players.size(); i += step) {
             int [] currentCandidate = targetCandidates.get(i);
             int X = currentCandidate[0]; int Z = currentCandidate[1];
 
-            Location loc = mapLocation.clone().add(X*40+1,0,Z*40+1);
+            Location loc = mapLocation.clone().add(X*20+1,0,Z*20+1);
             for (int x = X; x < X+bSize; x++) {
                 for (int z = Z; z < Z+bSize; z++) {
                     segments[x][z] = new MapSegment(new Base(), loc, null);
                 }
             }
-
-            segmentBuilder.buildSegment(segments[X][Z]);
-
+            System.out.println(segmentBuilder.buildSegment(segments[X][Z]));
             placed++;
         }
     }
