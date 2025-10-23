@@ -1,14 +1,31 @@
-prefix: "&7[&aCustomMinigame&7] "
+prefix: "&7[&aCustomMinigame&7]"
 admin:
   createMapUsage: "%prefix% &cИспользование: /cmga createmap <name> <maxPlayers> <xSize> <zSize>"
-  createSignUsage: "%prefix% &cИспользование: /cmga createsign"
+  createSignUsage: "%prefix% &cИспользование: /cmga createsign <name>"
   generateMapUsage: "%prefix% &cИспользование: /cmga generate <name>"
+  viewNotOnSign: "%prefix% &cВы должны смотреть на табличку, используя команду!"
+  signWasRemoved: "%prefix% &cВы уничтожили табличку!"
+  mapNotFound: "%prefix% &cУказанная карта не найдена!"
+  mapWasCreated: "%prefix% &7Карта была успешно создана!"
+  mapWasGenerated: "%prefix% &7Генерирую карту..."
   help:
     - '&8&m----------------&6&l %prefix% &8&m-------------'
     - '&6/cmga &8- &7Вывести это сообщение'
     - '&6/cmga createmap <name> <maxPlayers> <xSize> <zSize> &8- &7Создать новую карту'
+    - '&6/cmga createsign <name> &8- &7Создать новую табличку для игры'
     - '&6/cmga generate <name> &8- &7Генерирует карту заново'
     - '&8&m-------------------------------------'
+lobby:
+  joinMessage: "%prefix% &a%player%&7 присоединился к лобби [%current_players%/%max_players%]"
+  leaveMessage: "%prefix% &c%player%&7 покинул лобби [%current_players%/%max_players%]"
+  enoughToStart: "%prefix% &7Достаточно игроков для запуска игры. &cНачинаю обратный отсчет до запуска!"
+  timeToStart: "%prefix% &7игра начнется через &c%seconds% &7секунд!"
+  cantJoin: "%prefix% &cВы не можете присоединиться к лобби!"
+game:
+  prepareMapTitle: "%prefix%"
+  prepareMapSubtitle: "&7Идет подготовка карты. Ждите..."
+  startTitle: "%prefix%"
+  startSubtitle: "&aИгра началась!"
 scheme:
   notfound: "&cФайл схемы не найден: "
   unformatted: "&cНеизвестный формат схемы! "

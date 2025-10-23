@@ -4,6 +4,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.ilmiandluk.customMinigame.CustomMinigame;
+import org.ilmiandluk.customMinigame.game.Game;
+import org.ilmiandluk.customMinigame.game.GameController;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 import org.ilmiandluk.customMinigame.game.structures.environment.Forest;
 import org.ilmiandluk.customMinigame.game.structures.environment.Hills;
@@ -52,9 +54,6 @@ public class Map {
                 players.add(null);
             }
         }
-        System.out.println(
-                players.size()
-        );
     }
     // Я конченный, бегите
     public void segmentInitialize(){
@@ -104,10 +103,12 @@ public class Map {
             Location loc = mapLocation.clone().add(X*20+1,0,Z*20+1);
             for (int x = X; x < X+bSize; x++) {
                 for (int z = Z; z < Z+bSize; z++) {
-                    segments[x][z] = new MapSegment(new Base(), loc, null);
+                    segments[x][z] = new MapSegment(new Base(), loc, players.get(placed));
+                    Game game = GameController.getGameWithPlayer(players.get(placed));
+                    if(game != null) game.addSegmentToPlayerFromMap(segments[x][z], players.get(placed));
                 }
             }
-            System.out.println(segmentBuilder.buildSegment(segments[X][Z]));
+            segmentBuilder.buildSegment(segments[X][Z]);
             placed++;
         }
     }
@@ -151,6 +152,9 @@ public class Map {
 
     public List<Player> getPlayers() {
         return players;
+    }
+    public void setPlayers(List<Player> players) {
+        this.players = players;
     }
 
     public MapSegment[][] getSegments() {

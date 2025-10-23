@@ -20,20 +20,24 @@ import org.ilmiandluk.customMinigame.game.structures.builds.MilitarySchool;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 public class SegmentBuilder {
     private CustomMinigame plugin;
+    private final static List<CompletableFuture<Boolean>> activeFutures = Collections.synchronizedList(new ArrayList<>());
+
     public SegmentBuilder(CustomMinigame plugin) {
         this.plugin = plugin;
     }
 
     public CompletableFuture<Boolean> buildSegment(MapSegment mapSegment) {
         AbstractStructure structure = mapSegment.structure();
-        Location loc = mapSegment.loc().add(-1,0,-1);
-        System.out.println(mapSegment);
-        return CompletableFuture.supplyAsync(() -> {
+        Location loc = mapSegment.loc().add(-1, 0, -1);
+        CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
             File file = new File(plugin.getDataFolder().getPath() + File.separator + plugin.getConfigManager().getStructurePath(structure));
 
             if (!file.exists()) {
@@ -75,5 +79,30 @@ public class SegmentBuilder {
                 return false;
             }
         });
+
+        activeFutures.add(future);
+        future.whenComplete((result, throwable) -> {
+            activeFutures.remove(future);
+        });
+
+        return future;
+    }
+
+    public CompletableFuture<Void> waitForAllCompletions() {
+        synchronized (activeFutures) {
+            if (activeFutures.isEmpty()) {
+                return CompletableFuture.completedFuture(null);
+            }
+            return CompletableFuture.allOf(
+                    activeFutures.toArray(new CompletableFuture[0])
+            );
+        }
+    }
+
+    public static boolean haveTasks() {
+        synchronized (activeFutures) {
+            return !activeFutures.isEmpty();
+        }
     }
 }
+

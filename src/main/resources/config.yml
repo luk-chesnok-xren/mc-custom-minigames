@@ -6,3 +6,6 @@ structure:
   plain: "structures/plain.schem"
   forest: "structures/forest.schem"
   hills: "structures/hills.schem"
+lobby:
+  startTimer: 20
+  minPlayersToStart: 2
