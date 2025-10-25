@@ -1,5 +1,6 @@
 package org.ilmiandluk.customMinigame.game.handler;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,8 +11,12 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.util.RayTraceResult;
+import org.ilmiandluk.customMinigame.game.Game;
 import org.ilmiandluk.customMinigame.game.GameController;
+import org.ilmiandluk.customMinigame.game.inventory.ExploreItem;
 
 import java.util.Set;
 
@@ -35,6 +40,20 @@ public class GameHandler implements Listener {
             }
         }
     }
+    @EventHandler
+    public void onExploreItem(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Game game = GameController.getGameWithPlayer(player);
+        if(game != null) {
+            if(event.hasItem() && event.getItem().getType() == Material.STICK) {
+                RayTraceResult result = player.rayTraceBlocks(250.0);
+                if(result != null && result.getHitBlock() != null) {
+                    game.exploreTerritory(player, result.getHitBlock().getLocation());
+                }
+            }
+        }
+    }
+
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;

@@ -26,6 +26,9 @@ game:
   prepareMapSubtitle: "&7Идет подготовка карты. Ждите..."
   startTitle: "%prefix%"
   startSubtitle: "&aИгра началась!"
+  segmentWasOwned: "%prefix% &cК сожалению, выбранный сегмент уже занят: &e%player%"
+  segmentAlreadyYours: "%prefix% &7Выбранный сегмент уже принадлежит вам!"
+  exploreSegment: "%prefix% &aВы успешно исследовали территорию!"
 scheme:
   notfound: "&cФайл схемы не найден: "
   unformatted: "&cНеизвестный формат схемы! "

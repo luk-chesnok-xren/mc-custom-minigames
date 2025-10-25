@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -29,55 +30,60 @@ import java.util.logging.Level;
 public class SegmentBuilder {
     private CustomMinigame plugin;
     private final static List<CompletableFuture<Boolean>> activeFutures = Collections.synchronizedList(new ArrayList<>());
+    private final static HashMap<String, Clipboard> clipboardMap = new HashMap<>();
 
     public SegmentBuilder(CustomMinigame plugin) {
         this.plugin = plugin;
     }
 
     public CompletableFuture<Boolean> buildSegment(MapSegment mapSegment) {
-        AbstractStructure structure = mapSegment.structure();
-        Location loc = mapSegment.loc().add(-1, 0, -1);
+        AbstractStructure structure = mapSegment.getStructure();
+        Location loc = mapSegment.getLocation().add(-1, 0, -1);
         CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
-            File file = new File(plugin.getDataFolder().getPath() + File.separator + plugin.getConfigManager().getStructurePath(structure));
+            String path = plugin.getDataFolder().getPath() + File.separator + plugin.getConfigManager().getStructurePath(structure);
+            if(!clipboardMap.containsKey(path)) {
+                File file = new File(path);
 
-            if (!file.exists()) {
-                plugin.getLogger().log(Level.SEVERE, plugin.getMessagesManager().getString("scheme.notfound") + file.getAbsolutePath());
-                return false;
+                if (!file.exists()) {
+                    plugin.getLogger().log(Level.SEVERE, plugin.getMessagesManager().getString("scheme.notfound") + file.getAbsolutePath());
+                    return false;
+                }
+
+                ClipboardFormat format = ClipboardFormats.findByFile(file);
+                if (format == null) {
+                    plugin.getLogger().log(Level.SEVERE, plugin.getMessagesManager().getString("scheme.unformatted") + file.getAbsolutePath());
+                    return false;
+                }
+
+                try (ClipboardReader reader = format.getReader(new FileInputStream(file))) {
+                    Clipboard clipboard = reader.read();
+                    clipboardMap.put(path, clipboard);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
             }
+            Clipboard clipboard = clipboardMap.get(path);
 
-            ClipboardFormat format = ClipboardFormats.findByFile(file);
-            if (format == null) {
-                plugin.getLogger().log(Level.SEVERE, plugin.getMessagesManager().getString("scheme.unformatted") + file.getAbsolutePath());
-                return false;
-            }
+            EditSession editSession = Fawe.instance().getWorldEdit().newEditSessionBuilder()
+                    .world(BukkitAdapter.adapt(loc.getWorld()))
+                    .fastMode(true)
+                    .allowedRegionsEverywhere()
+                    .build();
+            Operation operation = new ClipboardHolder(clipboard)
+                    .createPaste(editSession)
+                    .to(BlockVector3.at(loc.getX(), loc.getY(), loc.getZ()))
+                    .ignoreAirBlocks(false)
+                    .build();
 
-            try (ClipboardReader reader = format.getReader(new FileInputStream(file))) {
-                Clipboard clipboard = reader.read();
+            Operations.complete(operation);
 
-                EditSession editSession = Fawe.instance().getWorldEdit().newEditSessionBuilder()
-                        .world(BukkitAdapter.adapt(loc.getWorld()))
-                        .fastMode(true)
-                        .allowedRegionsEverywhere()
-                        .build();
-                Operation operation = new ClipboardHolder(clipboard)
-                        .createPaste(editSession)
-                        .to(BlockVector3.at(loc.getX(), loc.getY(), loc.getZ()))
-                        .ignoreAirBlocks(false)
-                        .build();
+            editSession.close();
 
-                Operations.complete(operation);
-
-                editSession.close();
-
-                return true;
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            } catch (Exception e) {
-                e.printStackTrace();
-                return false;
-            }
+            return true;
         });
 
         activeFutures.add(future);

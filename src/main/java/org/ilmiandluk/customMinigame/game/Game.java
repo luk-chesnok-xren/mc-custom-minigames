@@ -1,24 +1,21 @@
 package org.ilmiandluk.customMinigame.game;
 
-import com.google.common.collect.ImmutableMap;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
 import com.sk89q.worldedit.world.block.BlockTypes;
-import net.royawesome.jlibnoise.module.modifier.Abs;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.ilmiandluk.customMinigame.CustomMinigame;
+import org.ilmiandluk.customMinigame.game.inventory.ExploreItem;
 import org.ilmiandluk.customMinigame.game.map.Map;
 import org.ilmiandluk.customMinigame.game.map.MapGameState;
 import org.ilmiandluk.customMinigame.game.map.MapSegment;
@@ -123,6 +120,7 @@ public class Game {
                     setGameInformation(player);
         }
         );
+        updateAllBorders();
     }
     private void setGameInformation(Player player){
         player.setGameMode(GameMode.ADVENTURE);
@@ -136,15 +134,16 @@ public class Game {
         player.setLevel(0);
 
         // Телепортируем на базу человечка
-        updateAllBorders();
-        player.teleport(playerOwnedSegments.get(player).getFirst().loc().clone().add(0, 40, 0));
+        new ExploreItem().giveItemToPlayer(player);
+
+        player.teleport(playerOwnedSegments.get(player).getFirst().getLocation().clone().add(0, 40, 0));
     }
     private void buildWoolBorders(MapSegment mapSegment, Player player){
-        World bukkitWorld = mapSegment.loc().getWorld();
+        World bukkitWorld = mapSegment.getLocation().getWorld();
         com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(bukkitWorld);
-        Location pos1 = mapSegment.loc().clone().add(0,-1,0);
-        Location pos2 = mapSegment.loc().clone().add(19,-1,19);
-        AbstractStructure structure = mapSegment.structure();
+        Location pos1 = mapSegment.getLocation().clone().add(0,-1,0);
+        Location pos2 = mapSegment.getLocation().clone().add(19,-1,19);
+        AbstractStructure structure = mapSegment.getStructure();
         BlockType wool = switch (playerColors.get(player)) {
             case PINK_WOOL -> Objects.requireNonNull(BlockTypes.PINK_WOOL);
             case RED_WOOL -> Objects.requireNonNull(BlockTypes.RED_WOOL);
@@ -201,6 +200,33 @@ public class Game {
         }
         playerOwnedSegments.get(player).add(segment);
     }
+    public void exploreTerritory(Player player, Location location){
+        Location mapLocation = gameMap.getMapLocation();
+        int xSize = gameMap.getxSize();
+        int zSize = gameMap.getzSize();
+        int X = (int) ((location.getBlockX()-mapLocation.getX())/20);
+        int Z = (int) ((location.getBlockZ()-mapLocation.getZ())/20);
+        if(X < xSize && X >= 0 && Z < zSize && Z >= 0){
+            MapSegment segment = gameMap.getSegments()[X][Z];
+            String message;
+            if(segment == null) return;
+            if(segment.getOwner() != null) {
+                if(segment.getOwner().equals(player)) {
+                    message = messageManager.getString("game.segmentAlreadyYours");
+                }
+                else{
+                    message = messageManager.getString("game.segmentWasOwned",  segment.getOwner());
+                }
+                player.sendMessage(message);
+                return;
+            }
+            message = messageManager.getString("game.exploreSegment");
+            addSegmentToPlayer(segment, player);
+            player.sendMessage(message);
+        }
+
+    }
+
     synchronized public void addSegmentToPlayer(MapSegment segment, Player player){
         if(!players.contains(player)) return;
         if(!playerOwnedSegments.containsKey(player)){
@@ -208,20 +234,21 @@ public class Game {
         }
         List<MapSegment> segments = playerOwnedSegments.get(player);
         segments.add(segment);
-        if(segments.size() > 1){
-            Class<? extends AbstractStructure> first = segments.get(segments.size()-2).structure().getClass();
-            Class<? extends AbstractStructure> second = segments.get(segments.size()-1).structure().getClass();
-            if(first != second){
-                buildWoolBorders(segment, player);
-            }
-            return;
-        }
-            buildWoolBorders(segment, player);
+        segment.setOwner(player);
+        buildWoolBorders(segment, player);
     }
     public void updateAllBorders(){
         for(java.util.Map.Entry<Player, List<MapSegment>> entry : playerOwnedSegments.entrySet()){
             for (int i = 0; i < entry.getValue().size(); i++) {
-                if(i > 0 && entry.getValue().get(i - 1).structure().getClass().equals(entry.getValue().get(i).structure().getClass())){
+                if(i==0){
+                    buildWoolBorders(entry.getValue().get(i), entry.getKey());
+                    continue;
+                }
+                Class<? extends AbstractStructure> first = entry.getValue().get(i - 1).getStructure().getClass();
+                Class<? extends AbstractStructure> second = entry.getValue().get(i).getStructure().getClass();
+
+                if(first.equals(second)
+                        && (first.equals(Base.class) || first.equals(MilitarySchool.class))){
                     continue;
                 }
                 buildWoolBorders(entry.getValue().get(i), entry.getKey());

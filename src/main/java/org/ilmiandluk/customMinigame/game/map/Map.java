@@ -75,7 +75,7 @@ public class Map {
         for(int x = 0; x < xSize; x++){
             String a = "";
             for(int z = 0; z < zSize; z++){
-                if(segments[x][z].structure() instanceof Base) a += "b";
+                if(segments[x][z].getStructure() instanceof Base) a += "b";
                 else a += ".";
             }
 
