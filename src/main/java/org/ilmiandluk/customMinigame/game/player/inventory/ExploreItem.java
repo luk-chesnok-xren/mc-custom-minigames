@@ -1,4 +1,4 @@
-package org.ilmiandluk.customMinigame.game.inventory;
+package org.ilmiandluk.customMinigame.game.player.inventory;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

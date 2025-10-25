@@ -60,7 +60,7 @@ public class Map {
         for(int x = 0; x < xSize; x++){
             for(int z = 0; z < zSize; z++){
                 AbstractStructure structure = getRandomEnvStructure();
-                Location loc = mapLocation.clone().add(x*20+1,0,z*20+1);
+                Location loc = mapLocation.clone().add(x*20,0,z*20);
                 segments[x][z] = new MapSegment(structure, loc, null);
                 segmentBuilder.buildSegment(segments[x][z]);
             }
@@ -100,7 +100,7 @@ public class Map {
             int [] currentCandidate = targetCandidates.get(i);
             int X = currentCandidate[0]; int Z = currentCandidate[1];
 
-            Location loc = mapLocation.clone().add(X*20+1,0,Z*20+1);
+            Location loc = mapLocation.clone().add(X*20,0,Z*20);
             for (int x = X; x < X+bSize; x++) {
                 for (int z = Z; z < Z+bSize; z++) {
                     segments[x][z] = new MapSegment(new Base(), loc, players.get(placed));

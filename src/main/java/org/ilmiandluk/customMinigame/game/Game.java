@@ -15,7 +15,8 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.ilmiandluk.customMinigame.CustomMinigame;
-import org.ilmiandluk.customMinigame.game.inventory.ExploreItem;
+import org.ilmiandluk.customMinigame.game.player.inventory.BuildItem;
+import org.ilmiandluk.customMinigame.game.player.inventory.ExploreItem;
 import org.ilmiandluk.customMinigame.game.map.Map;
 import org.ilmiandluk.customMinigame.game.map.MapGameState;
 import org.ilmiandluk.customMinigame.game.map.MapSegment;
@@ -23,6 +24,11 @@ import org.ilmiandluk.customMinigame.game.map.SegmentBuilder;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 import org.ilmiandluk.customMinigame.game.structures.builds.Base;
 import org.ilmiandluk.customMinigame.game.structures.builds.MilitarySchool;
+import org.ilmiandluk.customMinigame.game.structures.builds.Mineshaft;
+import org.ilmiandluk.customMinigame.game.structures.builds.Sawmill;
+import org.ilmiandluk.customMinigame.game.structures.environment.Forest;
+import org.ilmiandluk.customMinigame.game.structures.environment.Hills;
+import org.ilmiandluk.customMinigame.game.structures.environment.Plain;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 import org.ilmiandluk.customMinigame.util.PlayerInformationController;
 
@@ -31,8 +37,11 @@ import java.util.*;
 public class Game {
     private final Map gameMap;
     private final List<Player> players;
+    private SegmentBuilder segmentBuilder = CustomMinigame.getInstance().getSegmentBuilder();
     private final HashMap<Player, List<MapSegment>> playerOwnedSegments = new HashMap<>();
     private final HashMap<Player, GameWoolColors> playerColors = new HashMap<>();
+    private final Location borderLocation1;
+    private final Location borderLocation2;
 
     /*
         Получим Instance плагина для отправки сообщений через него.
@@ -59,16 +68,10 @@ public class Game {
         gameMap.setPlayers(players);
         SignController.updateSignForMap(gameMap, players.size());
 
-        /*
-            Вызовы методов вложены друг в друга.
-            startMapPrepareTask - когда готов выполняет
-                shuffleColors
-                дальше инициализация сегментов внутри Map
-                и присваивание нужных сегментов владельцам уже здесь через
+        // Определяем границы карты, чтобы игрок не выходил за ее пределы
 
-                startGame
-
-         */
+        borderLocation1 = gameMap.getMapLocation().clone().add(-20, 0, -20);
+        borderLocation2 = gameMap.getMapLocation().clone().add((gameMap.getxSize()+2)*20, 200, (gameMap.getzSize()+2)*20);
     }
 
     // Заполняет playerColors
@@ -133,9 +136,10 @@ public class Game {
         player.setExp(0);
         player.setLevel(0);
 
-        // Телепортируем на базу человечка
+        // Выдаём нужные предметы игроку
         new ExploreItem().giveItemToPlayer(player);
-
+        new BuildItem().giveItemToPlayer(player);
+        // Телепортируем на базу человечка
         player.teleport(playerOwnedSegments.get(player).getFirst().getLocation().clone().add(0, 40, 0));
     }
     private void buildWoolBorders(MapSegment mapSegment, Player player){
@@ -200,14 +204,99 @@ public class Game {
         }
         playerOwnedSegments.get(player).add(segment);
     }
+
+    public void buildStructure(Player player, Location location) {
+        Location mapLocation = gameMap.getMapLocation();
+        MapSegment[][] allSegments = gameMap.getSegments();
+        int xSize = gameMap.getxSize();
+        int zSize = gameMap.getzSize();
+        int X = (int) ((location.getBlockX() - mapLocation.getX()) / 20);
+        int Z = (int) ((location.getBlockZ() - mapLocation.getZ()) / 20);
+        if (X < xSize && X >= 0 && Z < zSize && Z >= 0) {
+            MapSegment segment = allSegments[X][Z];
+            if (segment == null) return;
+            if (segment.getOwner() == player) {
+                switch (segment.getStructure().getClass().getSimpleName()){
+                    case "Forest":
+                        segment.setStructure(new Sawmill());
+                        segmentBuilder.buildSegment(segment);
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if(isCancelled()) return;
+                                if (!SegmentBuilder.haveTasks()) {
+                                    buildWoolBorders(segment, player);
+                                    this.cancel();
+                                }
+                            }
+                        }.runTaskTimer(plugin, 0L, 5L);
+                        player.sendMessage(messageManager.getString("game.structureBuild"));
+                        return;
+
+                    case "Hills":
+                        segment.setStructure(new Mineshaft());
+                        segmentBuilder.buildSegment(segment);
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if(isCancelled()) return;
+                                if (!SegmentBuilder.haveTasks()) {
+                                    buildWoolBorders(segment, player);
+                                    this.cancel();
+                                }
+                            }
+                        }.runTaskTimer(plugin, 0L, 5L);
+                        player.sendMessage(messageManager.getString("game.structureBuild"));
+                        return;
+                    case "Plain":
+                        if(X+1<xSize && Z+1<zSize
+                                && allSegments[X+1][Z+1].getStructure().getClass().equals(Plain.class)
+                                && allSegments[X+1][Z].getStructure().getClass().equals(Plain.class)
+                                && allSegments[X][Z+1].getStructure().getClass().equals(Plain.class)
+                                && allSegments[X+1][Z+1].getOwner() != null
+                                && allSegments[X+1][Z].getOwner() != null
+                                && allSegments[X][Z+1].getOwner() != null
+                                && allSegments[X+1][Z+1].getOwner().equals(player)
+                                && allSegments[X+1][Z].getOwner().equals(player)
+                                && allSegments[X][Z+1].getOwner().equals(player)){
+                            segment.setStructure(new MilitarySchool());
+                            allSegments[X+1][Z+1].setStructure(new MilitarySchool());
+                            allSegments[X+1][Z].setStructure(new MilitarySchool());
+                            allSegments[X][Z+1].setStructure(new MilitarySchool());
+                            segmentBuilder.buildSegment(segment);
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    if(isCancelled()) return;
+                                    if (!SegmentBuilder.haveTasks()) {
+                                        buildWoolBorders(segment, player);
+                                        this.cancel();
+                                    }
+                                }
+                            }.runTaskTimer(plugin, 0L, 5L);
+                            player.sendMessage(messageManager.getString("game.structureBuild"));
+
+                        } else player.sendMessage(messageManager.getString("game.structureMilitaryBuildError"));
+                        return;
+
+                        default:
+                        player.sendMessage(messageManager.getString("game.structureBuildHelp"));
+                }
+            } else {
+                player.sendMessage(messageManager.getString("game.structureBuildOnlyOnOwn"));
+            }
+        }
+    }
+
     public void exploreTerritory(Player player, Location location){
         Location mapLocation = gameMap.getMapLocation();
+        MapSegment[][] allSegments = gameMap.getSegments();
         int xSize = gameMap.getxSize();
         int zSize = gameMap.getzSize();
         int X = (int) ((location.getBlockX()-mapLocation.getX())/20);
         int Z = (int) ((location.getBlockZ()-mapLocation.getZ())/20);
         if(X < xSize && X >= 0 && Z < zSize && Z >= 0){
-            MapSegment segment = gameMap.getSegments()[X][Z];
+            MapSegment segment = allSegments[X][Z];
             String message;
             if(segment == null) return;
             if(segment.getOwner() != null) {
@@ -220,9 +309,16 @@ public class Game {
                 player.sendMessage(message);
                 return;
             }
-            message = messageManager.getString("game.exploreSegment");
-            addSegmentToPlayer(segment, player);
-            player.sendMessage(message);
+            if(X+1<xSize && allSegments[X+1][Z].getOwner() != null && allSegments[X+1][Z].getOwner().equals(player)
+            || X-1>=0 && allSegments[X-1][Z].getOwner() != null && allSegments[X-1][Z].getOwner().equals(player)
+            || Z+1<zSize && allSegments[X][Z+1].getOwner() != null && allSegments[X][Z+1].getOwner().equals(player)
+            || Z-1>=0 && allSegments[X][Z-1].getOwner() != null && allSegments[X][Z-1].getOwner().equals(player)){
+                message = messageManager.getString("game.exploreSegment");
+                addSegmentToPlayer(segment, player);
+                player.sendMessage(message);
+                return;
+            }
+            player.sendMessage(messageManager.getString("game.exploreTooFar"));
         }
 
     }
@@ -253,6 +349,22 @@ public class Game {
                 }
                 buildWoolBorders(entry.getValue().get(i), entry.getKey());
             }
+        }
+    }
+    public void tpIfBorderCross(Player player){
+        Location playerPos = player.getLocation();
+        Location pos1 = borderLocation1;
+        Location pos2 = borderLocation2;
+        if(playerPos.getX() < Math.min(pos1.getX(), pos2.getX()) || playerPos.getX() > Math.max(pos1.getX(), pos2.getX()) ||
+                playerPos.getY() < Math.min(pos1.getY(), pos2.getY()) || playerPos.getY() > Math.max(pos1.getY(), pos2.getY()) ||
+                playerPos.getZ() < Math.min(pos1.getZ(), pos2.getZ()) || playerPos.getZ() > Math.max(pos1.getZ(), pos2.getZ())) {
+            double closestX = Math.max(Math.min(pos1.getX(), pos2.getX()), Math.min(Math.max(pos1.getX(), pos2.getX()), playerPos.getX()));
+            double closestY = Math.max(Math.min(pos1.getY(), pos2.getY()), Math.min(Math.max(pos1.getY(), pos2.getY()), playerPos.getY()));
+            double closestZ = Math.max(Math.min(pos1.getZ(), pos2.getZ()), Math.min(Math.max(pos1.getZ(), pos2.getZ()), playerPos.getZ()));
+
+            // Телепортируем игрока на границу
+            Location closestLoc = new Location(playerPos.getWorld(), closestX, closestY, closestZ, player.getYaw(), player.getPitch());
+            player.teleport(closestLoc);
         }
     }
     public List<MapSegment> getSegments(Player player){

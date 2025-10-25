@@ -38,7 +38,7 @@ public class SegmentBuilder {
 
     public CompletableFuture<Boolean> buildSegment(MapSegment mapSegment) {
         AbstractStructure structure = mapSegment.getStructure();
-        Location loc = mapSegment.getLocation().add(-1, 0, -1);
+        Location loc = mapSegment.getLocation().clone();
         CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
             String path = plugin.getDataFolder().getPath() + File.separator + plugin.getConfigManager().getStructurePath(structure);
             if(!clipboardMap.containsKey(path)) {

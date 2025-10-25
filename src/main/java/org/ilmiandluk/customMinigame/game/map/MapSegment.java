@@ -20,7 +20,7 @@ public class MapSegment {
     }
 
     public Location getLocation() {
-        return location;
+        return location.clone();
     }
 
     public Player getOwner() {

@@ -12,17 +12,17 @@ import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.util.RayTraceResult;
 import org.ilmiandluk.customMinigame.game.Game;
 import org.ilmiandluk.customMinigame.game.GameController;
-import org.ilmiandluk.customMinigame.game.inventory.ExploreItem;
 
 import java.util.Set;
 
 public class GameHandler implements Listener {
 
-    private static final Set<Integer> PROTECTED_SLOTS = Set.of(0);
+    private static final Set<Integer> PROTECTED_SLOTS = Set.of(0, 4);
 
 
     @EventHandler
@@ -41,6 +41,13 @@ public class GameHandler implements Listener {
         }
     }
     @EventHandler
+    public void onPlayerMovement(PlayerMoveEvent event) {
+        Game game = GameController.getGameWithPlayer(event.getPlayer());
+        if (game != null) {
+            game.tpIfBorderCross(event.getPlayer());
+        }
+    }
+    @EventHandler
     public void onExploreItem(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Game game = GameController.getGameWithPlayer(player);
@@ -49,6 +56,19 @@ public class GameHandler implements Listener {
                 RayTraceResult result = player.rayTraceBlocks(250.0);
                 if(result != null && result.getHitBlock() != null) {
                     game.exploreTerritory(player, result.getHitBlock().getLocation());
+                }
+            }
+        }
+    }
+    @EventHandler
+    public void onBuildItem(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Game game = GameController.getGameWithPlayer(player);
+        if(game != null) {
+            if(event.hasItem() && event.getItem().getType() == Material.BLAZE_ROD) {
+                RayTraceResult result = player.rayTraceBlocks(250.0);
+                if(result != null && result.getHitBlock() != null) {
+                    game.buildStructure(player, result.getHitBlock().getLocation());
                 }
             }
         }
