@@ -6,6 +6,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.ilmiandluk.customMinigame.CustomMinigame;
+import org.ilmiandluk.customMinigame.game.controller.GameController;
+import org.ilmiandluk.customMinigame.game.controller.LobbyController;
+import org.ilmiandluk.customMinigame.game.repository.SignRepository;
 import org.ilmiandluk.customMinigame.game.map.Map;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 
@@ -34,7 +37,7 @@ public class Lobby {
 
     private final List<Player> players = new ArrayList<>();
 
-    Lobby(Map lobbyMap) {
+    public Lobby(Map lobbyMap) {
         this.lobbyMap = lobbyMap;
         this.maxPlayers = lobbyMap.getMaxPlayers();
     }
@@ -92,7 +95,7 @@ public class Lobby {
 
             // Также, нужно обновить все таблички в мире, ссылающиеся на лобби
             // мы хотим изменить количество игроков на табличке, если что
-            SignController.updateSignForMap(lobbyMap, players.size());
+            SignRepository.updateSignForMap(lobbyMap, players.size());
             return true;
         }
 
@@ -113,7 +116,7 @@ public class Lobby {
             }
 
             // Также, нужно обновить все таблички в мире, ссылающиеся на лобби
-            SignController.updateSignForMap(lobbyMap, players.size());
+            SignRepository.updateSignForMap(lobbyMap, players.size());
             return true;
         }
         return false;

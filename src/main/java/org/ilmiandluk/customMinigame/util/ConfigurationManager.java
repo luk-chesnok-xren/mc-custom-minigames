@@ -1,10 +1,12 @@
 package org.ilmiandluk.customMinigame.util;
 
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.ilmiandluk.customMinigame.game.enums.Resources;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 
 import java.io.File;
@@ -13,7 +15,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -89,7 +91,16 @@ public class ConfigurationManager {
     }
     private String replacePlaceholders(String text, int num){
         return text != null ? text.
-                replaceAll("%seconds%", String.valueOf(num)): null;
+                replaceAll("%seconds%", String.valueOf(num))
+                .replaceAll("%count%", String.valueOf(num)): null;
+    }
+    private String replaceResources(String text, Map<Resources, Integer> resourcesIntegerMap){
+        StringBuilder result = new StringBuilder();
+        for(Resources resource: resourcesIntegerMap.keySet()){
+            result.append(resource.getConfigName()).append(" X ").append(resourcesIntegerMap.get(resource)).append(", ");
+        }
+        result.delete(result.length()-2, result.length());
+        return text.replaceAll("%resources%", result.toString());
     }
     private String translateColors(String text) {
         return text != null ? ChatColor.translateAlternateColorCodes('&', text) : null;
@@ -128,8 +139,15 @@ public class ConfigurationManager {
         return getStructureFile(structureName).exists();
     }
 
+    public ConfigurationSection getConfigurationSection(String path) {
+        return getConfig().getConfigurationSection(path);
+    }
+
     public String getString(String path) {
         return translateColors(replacePlaceholders(getConfig().getString(path, path + " not found")));
+    }
+    public String getString(String path, Map<Resources, Integer> resourcesIntegerMap) {
+        return replaceResources(translateColors(replacePlaceholders(getConfig().getString(path, path + " not found"))), resourcesIntegerMap);
     }
 
     public String getString(String path, String defaultValue) {
@@ -160,6 +178,13 @@ public class ConfigurationManager {
 
     public int getInt(String path, int defaultValue) {
         return getConfig().getInt(path, defaultValue);
+    }
+    public double getDouble(String path) {
+        return getConfig().getDouble(path);
+    }
+
+    public double getDouble(String path, double defaultValue) {
+        return getConfig().getDouble(path, defaultValue);
     }
 
     public boolean getBoolean(String path) {

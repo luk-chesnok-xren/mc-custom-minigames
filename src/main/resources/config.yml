@@ -9,3 +9,68 @@ structure:
 lobby:
   startTimer: 20
   minPlayersToStart: 2
+game:
+  moneyChargeCoefficient: 1.5
+  populationGrowthGuaranteed: 1
+  populationGrowthCoefficient: 0.15
+  soldiersPerPayday: 1
+
+  soldiersToExplore: 2
+  exploreTime: 20
+
+  startPlayerResources:
+    wood:
+      origin: 20
+      bound: 30
+    stone:
+      origin: 20
+      bound: 30
+    iron:
+      origin: 20
+      bound: 30
+    precious:
+      origin: 0
+      bound: 2
+    people:
+      origin: 6
+      bound: 8
+    soldiers:
+      origin: 3
+      bound: 4
+    money:
+      origin: 100
+      bound: 150
+
+  militarySchoolBuildResources:
+    stone: 10
+    iron: 10
+    wood: 20
+    money: 50
+
+  sawmillBuildResources:
+    stone: 5
+    iron: 3
+    wood: 8
+    money: 25
+
+  mineshaftBuildResources:
+    stone: 8
+    iron: 5
+    wood: 6
+    money: 25
+
+  mineshaftProvides:
+    stone:
+      origin: 4
+      bound: 8
+    iron:
+      origin: 2
+      bound: 5
+    precious:
+      origin: 0
+      bound: 2
+
+  sawmillProvides:
+    wood:
+      origin: 3
+      bound: 6

@@ -1,21 +1,18 @@
-package org.ilmiandluk.customMinigame.game.map;
+package org.ilmiandluk.customMinigame.game.repository;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.ilmiandluk.customMinigame.CustomMinigame;
+import org.ilmiandluk.customMinigame.game.map.Map;
 
 import java.io.File;
 import java.util.LinkedHashMap;
 
-// Предоставляет доступ к Map.
-// Загружает ранее сохранённые Map.
-// Выгружает новые, созданные пользователем Map в yml файл.
-public class MapController {
-    private final static LinkedHashMap<String, Map> mapList = new LinkedHashMap<>();
+public class MapRepository {
     private static FileConfiguration mapsConfig;
-
+    private final static LinkedHashMap<String, Map> mapList = new LinkedHashMap<>();
 
     public static Map getMap(String name){
         return mapList.get(name);
@@ -26,25 +23,10 @@ public class MapController {
         return newMap;
     }
 
-    /*
-        Загружает все карты из файла maps.yml в mapList (десериализация объектов).
-        Возможен многократный вызов (Чтобы подтянуть изменения из файла,
-        внесённые вручную в maps.yml).
-
-        Структура maps.yml:
-        maps:
-            <Название карты 1> (mapName):
-                xSize: <int>
-                zSize: <int>
-                maxPlayers: <int>
-                mapLocation:
-                    world: <String>
-                    x: <int>
-                    y: <int>
-                    z: <int>
-                    yaw: <int>
-                    pitch: <int>
-
+    /**
+     Загружает все карты из файла maps.yml в mapList (десериализация объектов).
+     Возможен многократный вызов (Чтобы подтянуть изменения из файла,
+     внесённые вручную в maps.yml).
      */
     public static void loadMapsFromFile(){
         File file = getMapsYMLFile();
@@ -63,23 +45,8 @@ public class MapController {
         }
     }
 
-    /*
-        Сохраняет новую карту в файл maps.yml и добавляет в mapList (сериализация объектов).
-
-        Структура maps.yml:
-        maps:
-            <Название карты 1> (mapName):
-                xSize: <int>
-                zSize: <int>
-                maxPlayers: <int>
-                mapLocation:
-                    world: <String>
-                    x: <int>
-                    y: <int>
-                    z: <int>
-                    yaw: <int>
-                    pitch: <int>
-
+    /**
+     Сохраняет новую карту в файл maps.yml и добавляет в mapList (сериализация объектов).
      */
     public static void addMapToFile(Map map){
         File file = getMapsYMLFile();
@@ -99,9 +66,9 @@ public class MapController {
         mapList.put(map.getMapName(), map);
     }
 
-    /*
-        Методы для работы с Location
-        (Десериализация и сериализация из конфига)
+    /**
+     Методы для работы с Location
+     (Десериализация и сериализация из конфига)
      */
 
     private static void setLocationToPath(String path, Location loc){
@@ -123,8 +90,8 @@ public class MapController {
         );
         return loc;
     }
-    /*
-        Возвращает File для maps.yml. Пытается создать, если его не существует.
+    /**
+     Возвращает File для maps.yml. Пытается создать, если его не существует.
      */
     private static File getMapsYMLFile(){
         File file = new File(CustomMinigame.getInstance().getDataFolder(), "maps.yml");

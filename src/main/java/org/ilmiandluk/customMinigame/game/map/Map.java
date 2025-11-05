@@ -1,11 +1,11 @@
 package org.ilmiandluk.customMinigame.game.map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.Game;
-import org.ilmiandluk.customMinigame.game.GameController;
+import org.ilmiandluk.customMinigame.game.controller.GameController;
+import org.ilmiandluk.customMinigame.game.enums.MapGameState;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 import org.ilmiandluk.customMinigame.game.structures.environment.Forest;
 import org.ilmiandluk.customMinigame.game.structures.environment.Hills;
@@ -15,47 +15,44 @@ import org.ilmiandluk.customMinigame.game.structures.builds.Base;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
-
-// Map - связан с MapController. Только он может вызывать конструктор Map.
-// Но многие методы должны вызываться извне, они помечены как public.
 
 public class Map {
+    private final static CustomMinigame customMinigame = CustomMinigame.getInstance();
+
     private MapGameState mapGameState = MapGameState.READY;
-    private SegmentBuilder segmentBuilder = CustomMinigame.getInstance().getSegmentBuilder();
     private final String mapName;
     private final int maxPlayers;
     private final int segmentCount;
+    private final SegmentBuilder segmentBuilder;
     private final int xSize;
     private final int zSize;
+    private final BoundingBox boundingBox;
     private final Location mapLocation;
     private List<Player> players;
     private MapSegment[][] segments;
     private Random random = new Random();
 
-    Map(String mapName, Location mapLocation, int maxPlayers, int xSize, int zSize) {
+    public Map(String mapName, Location mapLocation, int maxPlayers, int xSize, int zSize) {
         this.mapName = mapName;
-        /*
-        Костыль. При начале построения поля (вставке структур)
-        происходит смещение по z.
-        Смещение на 18 по z делает так, что карта
-        начинает строится на месте, где она должна была.
-
-         */
         this.mapLocation = mapLocation;
         this.maxPlayers = maxPlayers;
         this.segmentCount = xSize*zSize;
+        this.segmentBuilder = new SegmentBuilder(customMinigame);
         this.xSize = xSize;
         this.zSize = zSize;
+        this.boundingBox = BoundingBox.of(mapLocation.clone().add(-20, 0, -20),
+        mapLocation.clone().add((xSize+2)*20, 200, (zSize+2)*20));
         segments = new MapSegment[xSize][zSize];
         this.players = new ArrayList<>();
+
+        // Это для тестов.
         {
             for (int i = 0; i < 5; i++) {
                 players.add(null);
             }
         }
     }
-    // Я конченный, бегите
+
     public void segmentInitialize(){
         for(int x = 0; x < xSize; x++){
             for(int z = 0; z < zSize; z++){
@@ -67,20 +64,6 @@ public class Map {
         }
 
         setUpBases(2);
-
-        //логи чисто для меня
-        //как видим оно нормально расставляет все в самом массиве segments
-        //но на деле я не могу понять где у схемы находится origin
-        // поэтому он не может вставить нормально в саму карту в майнкрафте
-        for(int x = 0; x < xSize; x++){
-            String a = "";
-            for(int z = 0; z < zSize; z++){
-                if(segments[x][z].getStructure() instanceof Base) a += "b";
-                else a += ".";
-            }
-
-            Bukkit.getLogger().log(Level.INFO,  a);
-        }
     }
 
     private void setUpBases(int bSize) {
@@ -103,9 +86,13 @@ public class Map {
             Location loc = mapLocation.clone().add(X*20,0,Z*20);
             for (int x = X; x < X+bSize; x++) {
                 for (int z = Z; z < Z+bSize; z++) {
-                    segments[x][z] = new MapSegment(new Base(), loc, players.get(placed));
-                    Game game = GameController.getGameWithPlayer(players.get(placed));
-                    if(game != null) game.addSegmentToPlayerFromMap(segments[x][z], players.get(placed));
+                    Player player = players.get(placed);
+
+                    Game game = GameController.getGameWithPlayer(player);
+                    if(game != null) {
+                        segments[x][z] = new MapSegment(new Base(game.getGamePlayer(player)), loc, player);
+                        game.addSegmentToPlayerFromMap(segments[x][z], player);
+                    }
                 }
             }
             segmentBuilder.buildSegment(segments[X][Z]);
@@ -159,5 +146,13 @@ public class Map {
 
     public MapSegment[][] getSegments() {
         return segments;
+    }
+
+    public BoundingBox getBoundingBox() {
+        return boundingBox;
+    }
+
+    public SegmentBuilder getSegmentBuilder() {
+        return segmentBuilder;
     }
 }

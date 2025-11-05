@@ -1,14 +1,14 @@
-package org.ilmiandluk.customMinigame.util;
+package org.ilmiandluk.customMinigame.util.controler;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.bukkit.entity.Player;
+import org.ilmiandluk.customMinigame.util.PlayerInformation;
 
-import java.io.File;
 import java.util.HashMap;
 
 public class PlayerInformationController {
     private static HashMap<Player, PlayerInformation> informationHashMap = new HashMap<>();
-    private static File inventoryFile;
+    //private static File inventoryFile;
 
     @CanIgnoreReturnValue
     public static PlayerInformation getOrSaveInformation(Player player){

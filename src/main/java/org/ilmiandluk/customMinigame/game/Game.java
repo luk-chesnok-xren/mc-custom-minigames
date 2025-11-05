@@ -8,40 +8,46 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
-import com.sk89q.worldedit.world.block.BlockTypes;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.ilmiandluk.customMinigame.CustomMinigame;
+import org.ilmiandluk.customMinigame.game.map.BoundingBox;
+import org.ilmiandluk.customMinigame.game.player.GamePlayer;
+import org.ilmiandluk.customMinigame.game.repository.SignRepository;
+import org.ilmiandluk.customMinigame.game.enums.GameWoolColors;
 import org.ilmiandluk.customMinigame.game.player.inventory.BuildItem;
 import org.ilmiandluk.customMinigame.game.player.inventory.ExploreItem;
 import org.ilmiandluk.customMinigame.game.map.Map;
-import org.ilmiandluk.customMinigame.game.map.MapGameState;
+import org.ilmiandluk.customMinigame.game.enums.MapGameState;
 import org.ilmiandluk.customMinigame.game.map.MapSegment;
 import org.ilmiandluk.customMinigame.game.map.SegmentBuilder;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
+import org.ilmiandluk.customMinigame.game.structures.BuildStructure;
 import org.ilmiandluk.customMinigame.game.structures.builds.Base;
 import org.ilmiandluk.customMinigame.game.structures.builds.MilitarySchool;
 import org.ilmiandluk.customMinigame.game.structures.builds.Mineshaft;
 import org.ilmiandluk.customMinigame.game.structures.builds.Sawmill;
 import org.ilmiandluk.customMinigame.game.structures.environment.Forest;
-import org.ilmiandluk.customMinigame.game.structures.environment.Hills;
 import org.ilmiandluk.customMinigame.game.structures.environment.Plain;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
-import org.ilmiandluk.customMinigame.util.PlayerInformationController;
+import org.ilmiandluk.customMinigame.util.controler.PlayerInformationController;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Game {
     private final Map gameMap;
+    private final List<GamePlayer> gamePlayers;
+    private final BoundingBox boundingBox;
     private final List<Player> players;
-    private SegmentBuilder segmentBuilder = CustomMinigame.getInstance().getSegmentBuilder();
+    private final SegmentBuilder segmentBuilder;
     private final HashMap<Player, List<MapSegment>> playerOwnedSegments = new HashMap<>();
     private final HashMap<Player, GameWoolColors> playerColors = new HashMap<>();
-    private final Location borderLocation1;
-    private final Location borderLocation2;
 
     /*
         Получим Instance плагина для отправки сообщений через него.
@@ -55,27 +61,24 @@ public class Game {
     private final ConfigurationManager configManager
             = CustomMinigame.getInstance().getConfigManager();
 
-    /*
-        Ниже будем хранить все таски, чтобы затем отменять их, когда нужно.
-     */
-
 
     public Game(Map gameMap, List<Player> players) {
         this.gameMap = gameMap;
         this.players = players;
+        this.boundingBox = gameMap.getBoundingBox();
+        this.segmentBuilder = gameMap.getSegmentBuilder();
+        shuffleColors(players);
+
+        this.gamePlayers = players.stream().
+                map(player -> new GamePlayer(player, playerColors.get(player))).
+                collect(Collectors.toCollection(ArrayList::new));
 
         gameMap.setMapGameState(MapGameState.IN_GAME);
         gameMap.setPlayers(players);
-        SignController.updateSignForMap(gameMap, players.size());
+        SignRepository.updateSignForMap(gameMap, players.size());
+        }
 
-        // Определяем границы карты, чтобы игрок не выходил за ее пределы
-
-        borderLocation1 = gameMap.getMapLocation().clone().add(-20, 0, -20);
-        borderLocation2 = gameMap.getMapLocation().clone().add((gameMap.getxSize()+2)*20, 200, (gameMap.getzSize()+2)*20);
-    }
-
-    // Заполняет playerColors
-    private void shuffleColors(){
+    private void shuffleColors(List<Player> players){
         List<GameWoolColors> shuffled = new ArrayList<>(Arrays.asList(GameWoolColors.values()));
         Collections.shuffle(shuffled);
         for (int i = 0; i < players.size(); i++) {
@@ -83,26 +86,31 @@ public class Game {
         }
     }
 
+    /**
+     * Вызов из GameController'а.
+     * <p>
+     * Вызывается единожды. Вызывает постройку сегментов, ждет окончания и начинает игру.
+     */
     public void startMapPrepareTask() {
-        shuffleColors();
-        System.out.println(playerColors);
         gameMap.segmentInitialize();
 
         new BukkitRunnable() {
             @Override
             public void run() {
                 // Показываем игрокам статус
-                players.forEach(player -> player.sendTitle(
-                        messageManager.getString("game.prepareMapTitle"),
-                        messageManager.getString("game.prepareMapSubtitle"),
-                        0, 40*20, 0));
+                gamePlayers.forEach(player -> {
+                    player.getPlayer().sendTitle(
+                            messageManager.getString("game.prepareMapTitle"),
+                            messageManager.getString("game.prepareMapSubtitle"),
+                            0, 40*20, 0);
+                });
 
                 // Проверяем каждую секунду, завершены ли задачи
                 new BukkitRunnable() {
                     @Override
                     public void run() {
                         if(isCancelled()) return;
-                        if (!SegmentBuilder.haveTasks()) {
+                        if (!segmentBuilder.haveTasks()) {
                             startGame();
                             this.cancel();
                         }
@@ -114,13 +122,13 @@ public class Game {
     }
 
     private void startGame(){
-        players.forEach(player -> {
-            player.
+        gamePlayers.forEach(player -> {
+            player.getPlayer().
                 sendTitle(messageManager.getString("game.startTitle"),
                         messageManager.getString("game.startSubtitle"),
                         0,5*20,0);
-                    PlayerInformationController.getOrSaveInformation(player);
-                    setGameInformation(player);
+                    PlayerInformationController.getOrSaveInformation(player.getPlayer());
+                    setGameInformation(player.getPlayer());
         }
         );
         updateAllBorders();
@@ -148,36 +156,12 @@ public class Game {
         Location pos1 = mapSegment.getLocation().clone().add(0,-1,0);
         Location pos2 = mapSegment.getLocation().clone().add(19,-1,19);
         AbstractStructure structure = mapSegment.getStructure();
-        BlockType wool = switch (playerColors.get(player)) {
-            case PINK_WOOL -> Objects.requireNonNull(BlockTypes.PINK_WOOL);
-            case RED_WOOL -> Objects.requireNonNull(BlockTypes.RED_WOOL);
-            case BLUE_WOOL -> Objects.requireNonNull(BlockTypes.BLUE_WOOL);
-            case CYAN_WOOL -> Objects.requireNonNull(BlockTypes.CYAN_WOOL);
-            case BROWN_WOOL -> Objects.requireNonNull(BlockTypes.BROWN_WOOL);
-            case GREEN_WOOL -> Objects.requireNonNull(BlockTypes.GREEN_WOOL);
-            case LIME_WOOL -> Objects.requireNonNull(BlockTypes.LIME_WOOL);
-            case ORANGE_WOOL -> Objects.requireNonNull(BlockTypes.ORANGE_WOOL);
-            case PURPLE_WOOL -> Objects.requireNonNull(BlockTypes.PURPLE_WOOL);
-            case YELLOW_WOOL -> Objects.requireNonNull(BlockTypes.YELLOW_WOOL);
-        };
+        BlockType wool = playerColors.get(player).getBlockType();
         if(structure instanceof Base || structure instanceof MilitarySchool){
             pos2.add(20, 0, 20);
         }
         // Конвертируем точки в BlockVector3
-        BlockVector3 min = BlockVector3.at(
-                Math.min(pos1.getBlockX(), pos2.getBlockX()),
-                Math.min(pos1.getBlockY(), pos2.getBlockY()),
-                Math.min(pos1.getBlockZ(), pos2.getBlockZ())
-        );
-
-        BlockVector3 max = BlockVector3.at(
-                Math.max(pos1.getBlockX(), pos2.getBlockX()),
-                Math.max(pos1.getBlockY(), pos2.getBlockY()),
-                Math.max(pos1.getBlockZ(), pos2.getBlockZ())
-        );
-
-        // Создаем регион
-        CuboidRegion region = new CuboidRegion(weWorld, min, max);
+        CuboidRegion region = getBlockVector3s(pos1, pos2, weWorld);
         try (EditSession editSession = WorldEdit.getInstance()
                 .newEditSessionBuilder()
                 .world(weWorld)
@@ -197,14 +181,29 @@ public class Game {
         }
     }
 
+    /**
+     * Стоит вызывать только из Map, при инициализации сегментов.
+     */
     public void addSegmentToPlayerFromMap(MapSegment segment, Player player){
         if(!players.contains(player)) return;
         if(!playerOwnedSegments.containsKey(player)){
             playerOwnedSegments.put(player, new ArrayList<>());
         }
         playerOwnedSegments.get(player).add(segment);
+        getGamePlayer(player).addStructure(segment.getStructure());
     }
 
+    /**
+     * Вызывается при нажатии игрока ПКМ специальным предметом (Построить здание).
+     * <p>
+     * Пытается построить здание, определяемое типом сегмента, на который нажал игрок.
+     * Если тип сегмента Forest - пытаемся строить Sawmill;
+     * Если тип сегмента Hills - пытаемся строить Mineshaft;
+     * Если тип сегмента Plains - проверяет, чтобы рядом было еще 3 Plains, принадлежащие игроку
+     * - пытается построить MilitarySchool (структуру 2x2).
+     * @param player игрок, использующий инструмент
+     * @param location блок, в сторону которого игрок смотрел при нажатии
+     */
     public void buildStructure(Player player, Location location) {
         Location mapLocation = gameMap.getMapLocation();
         MapSegment[][] allSegments = gameMap.getSegments();
@@ -216,70 +215,35 @@ public class Game {
             MapSegment segment = allSegments[X][Z];
             if (segment == null) return;
             if (segment.getOwner() == player) {
+                BuildStructure structure;
+                GamePlayer gamePlayer = getGamePlayer(player);
                 switch (segment.getStructure().getClass().getSimpleName()){
                     case "Forest":
-                        segment.setStructure(new Sawmill());
-                        segmentBuilder.buildSegment(segment);
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                if(isCancelled()) return;
-                                if (!SegmentBuilder.haveTasks()) {
-                                    buildWoolBorders(segment, player);
-                                    this.cancel();
-                                }
-                            }
-                        }.runTaskTimer(plugin, 0L, 5L);
-                        player.sendMessage(messageManager.getString("game.structureBuild"));
+                        structure = new Sawmill(gamePlayer);
+                        if(gamePlayer.canBuild(structure)) {
+                            gamePlayer.build(structure);
+                            buildSingleSegmentStructure(segment, structure, player);
+                        }
                         return;
 
                     case "Hills":
-                        segment.setStructure(new Mineshaft());
-                        segmentBuilder.buildSegment(segment);
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                if(isCancelled()) return;
-                                if (!SegmentBuilder.haveTasks()) {
-                                    buildWoolBorders(segment, player);
-                                    this.cancel();
-                                }
-                            }
-                        }.runTaskTimer(plugin, 0L, 5L);
-                        player.sendMessage(messageManager.getString("game.structureBuild"));
+                        structure = new Mineshaft(gamePlayer);
+                        if(gamePlayer.canBuild(structure)) {
+                            gamePlayer.build(structure);
+                            buildSingleSegmentStructure(segment, structure, player);
+                        }
                         return;
                     case "Plain":
-                        if(X+1<xSize && Z+1<zSize
-                                && allSegments[X+1][Z+1].getStructure().getClass().equals(Plain.class)
-                                && allSegments[X+1][Z].getStructure().getClass().equals(Plain.class)
-                                && allSegments[X][Z+1].getStructure().getClass().equals(Plain.class)
-                                && allSegments[X+1][Z+1].getOwner() != null
-                                && allSegments[X+1][Z].getOwner() != null
-                                && allSegments[X][Z+1].getOwner() != null
-                                && allSegments[X+1][Z+1].getOwner().equals(player)
-                                && allSegments[X+1][Z].getOwner().equals(player)
-                                && allSegments[X][Z+1].getOwner().equals(player)){
-                            segment.setStructure(new MilitarySchool());
-                            allSegments[X+1][Z+1].setStructure(new MilitarySchool());
-                            allSegments[X+1][Z].setStructure(new MilitarySchool());
-                            allSegments[X][Z+1].setStructure(new MilitarySchool());
-                            segmentBuilder.buildSegment(segment);
-                            new BukkitRunnable() {
-                                @Override
-                                public void run() {
-                                    if(isCancelled()) return;
-                                    if (!SegmentBuilder.haveTasks()) {
-                                        buildWoolBorders(segment, player);
-                                        this.cancel();
-                                    }
-                                }
-                            }.runTaskTimer(plugin, 0L, 5L);
-                            player.sendMessage(messageManager.getString("game.structureBuild"));
-
-                        } else player.sendMessage(messageManager.getString("game.structureMilitaryBuildError"));
+                        if(canBuildMilitarySchool(X, Z, player)){
+                            structure = new MilitarySchool(gamePlayer);
+                            if(gamePlayer.canBuild(structure)) {
+                                gamePlayer.build(structure);
+                                buildMilitarySchool(X, Z, player, gamePlayer);
+                            }
+                        }
+                        else player.sendMessage(messageManager.getString("game.structureMilitaryBuildError"));
                         return;
-
-                        default:
+                    default:
                         player.sendMessage(messageManager.getString("game.structureBuildHelp"));
                 }
             } else {
@@ -288,6 +252,14 @@ public class Game {
         }
     }
 
+    /**
+     * Вызывается при нажатии игрока ПКМ специальным предметом (Исследовать территорию).
+     * <p>
+     * Пытается отправить "солдат" на исследование территории.
+     * Необходимое количество определяется в config.yml
+     * @param player игрок, использующий инструмент
+     * @param location блок, в сторону которого игрок смотрел при нажатии
+     */
     public void exploreTerritory(Player player, Location location){
         Location mapLocation = gameMap.getMapLocation();
         MapSegment[][] allSegments = gameMap.getSegments();
@@ -309,12 +281,17 @@ public class Game {
                 player.sendMessage(message);
                 return;
             }
-            if(X+1<xSize && allSegments[X+1][Z].getOwner() != null && allSegments[X+1][Z].getOwner().equals(player)
-            || X-1>=0 && allSegments[X-1][Z].getOwner() != null && allSegments[X-1][Z].getOwner().equals(player)
-            || Z+1<zSize && allSegments[X][Z+1].getOwner() != null && allSegments[X][Z+1].getOwner().equals(player)
-            || Z-1>=0 && allSegments[X][Z-1].getOwner() != null && allSegments[X][Z-1].getOwner().equals(player)){
+            GamePlayer gamePlayer = getGamePlayer(player);
+            if(!gamePlayer.canExplore()) {
+                player.sendMessage(messageManager.getString("game.cantExplore", configManager.getInt("game.soldiersToExplore")));
+                return;
+            }
+
+            if(hasAdjacentOwnedSegment(X, Z, player)){
+                gamePlayer.explore();
                 message = messageManager.getString("game.exploreSegment");
                 addSegmentToPlayer(segment, player);
+
                 player.sendMessage(message);
                 return;
             }
@@ -323,6 +300,12 @@ public class Game {
 
     }
 
+    /**
+     * Добавляет сегмент игроку.
+     * Отстраивает границы сегмента нужным цветом.
+     * @param segment сегмент, который нужно добавить игроку
+     * @param player владелец сегмента
+     */
     synchronized public void addSegmentToPlayer(MapSegment segment, Player player){
         if(!players.contains(player)) return;
         if(!playerOwnedSegments.containsKey(player)){
@@ -333,6 +316,15 @@ public class Game {
         segment.setOwner(player);
         buildWoolBorders(segment, player);
     }
+    /**
+     * Костыль.
+     * <p>
+     * Обновляет цвета границ всех сегментов на карте.
+     * Применяется редко, но метко.
+     * <p>
+     * Допустим, если какой-то игрок завоевал территорию другого игрока
+     * и теперь нужно перерисовать все границы, чтобы они отображались верно.
+     */
     public void updateAllBorders(){
         for(java.util.Map.Entry<Player, List<MapSegment>> entry : playerOwnedSegments.entrySet()){
             for (int i = 0; i < entry.getValue().size(); i++) {
@@ -351,24 +343,132 @@ public class Game {
             }
         }
     }
+    /**
+     * Проверяет, достиг ли игрок границы карты.
+     * Если да - не дает ему пройти через границу.
+     */
     public void tpIfBorderCross(Player player){
-        Location playerPos = player.getLocation();
-        Location pos1 = borderLocation1;
-        Location pos2 = borderLocation2;
-        if(playerPos.getX() < Math.min(pos1.getX(), pos2.getX()) || playerPos.getX() > Math.max(pos1.getX(), pos2.getX()) ||
-                playerPos.getY() < Math.min(pos1.getY(), pos2.getY()) || playerPos.getY() > Math.max(pos1.getY(), pos2.getY()) ||
-                playerPos.getZ() < Math.min(pos1.getZ(), pos2.getZ()) || playerPos.getZ() > Math.max(pos1.getZ(), pos2.getZ())) {
-            double closestX = Math.max(Math.min(pos1.getX(), pos2.getX()), Math.min(Math.max(pos1.getX(), pos2.getX()), playerPos.getX()));
-            double closestY = Math.max(Math.min(pos1.getY(), pos2.getY()), Math.min(Math.max(pos1.getY(), pos2.getY()), playerPos.getY()));
-            double closestZ = Math.max(Math.min(pos1.getZ(), pos2.getZ()), Math.min(Math.max(pos1.getZ(), pos2.getZ()), playerPos.getZ()));
+        Location pos = player.getLocation();
 
-            // Телепортируем игрока на границу
-            Location closestLoc = new Location(playerPos.getWorld(), closestX, closestY, closestZ, player.getYaw(), player.getPitch());
-            player.teleport(closestLoc);
+        if (!boundingBox.contains(pos)) {
+            player.teleport(boundingBox.clamp(pos));
         }
     }
+
+    /*
+        Вспомогательные методы.
+     */
+
+    /**
+     * Проверяет, есть ли рядом сегменты, принадлежащие игроку.
+     * На 1 сегмент в каждую сторону света от основного сегмента.
+     * @param X X исследуемого сегмента в массиве
+     * @param Z Z исследуемого сегмента в массиве
+     * @param player игрок, сегменты которого мы ищем
+     * @return
+     * true - если рядом есть сегмент игрока
+     * false - если рядом нет сегмента игрока
+     */
+    private boolean hasAdjacentOwnedSegment(int X, int Z, Player player) {
+        int[][] offsets = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+        MapSegment[][] allSegments = gameMap.getSegments();
+        int xSize = gameMap.getxSize();
+        int zSize = gameMap.getzSize();
+        for (int[] o : offsets) {
+            int nx = X + o[0];
+            int nz = Z + o[1];
+            if (nx < 0 || nz < 0 || nx >= xSize || nz >= zSize) continue;
+
+            MapSegment neighbor = allSegments[nx][nz];
+            if (neighbor.getOwner() != null && neighbor.getOwner().equals(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void buildSingleSegmentStructure(MapSegment segment, AbstractStructure structure, Player player) {
+        segment.setStructure(structure);
+        segmentBuilder.buildSegment(segment);
+        startBorderCheckTask(segment, player);
+        player.sendMessage(messageManager.getString("game.structureBuild"));
+    }
+
+    private void buildMilitarySchool(int X, int Z, Player player, GamePlayer gamePlayer) {
+        AbstractStructure school = new MilitarySchool(gamePlayer);
+
+        MapSegment[][] s = gameMap.getSegments();
+        s[X][Z].setStructure(school);
+        s[X+1][Z].setStructure(school);
+        s[X][Z+1].setStructure(school);
+        s[X+1][Z+1].setStructure(school);
+
+        segmentBuilder.buildSegment(s[X][Z]);
+        startBorderCheckTask(s[X][Z], player);
+        player.sendMessage(messageManager.getString("game.structureBuild"));
+    }
+
+    private boolean canBuildMilitarySchool(int X, int Z, Player player) {
+        if (X + 1 >= gameMap.getxSize() || Z + 1 >= gameMap.getzSize()) return false;
+
+        MapSegment[][] s = gameMap.getSegments();
+        return Stream.of(
+                s[X][Z], s[X+1][Z], s[X][Z+1], s[X+1][Z+1]
+        ).allMatch(seg ->
+                seg.getStructure().getClass().equals(Plain.class) &&
+                        player.equals(seg.getOwner())
+        );
+    }
+
+    /**
+     * Костыль.
+     * <p>
+     * Ждет когда все сегменты будут достроены, затем обновляет цвет границы сегмента.
+     * <p>
+     * Перестраивает белую шерсть на блоки того цвета, который соответствует игроку.
+     */
+    private void startBorderCheckTask(MapSegment segment, Player player) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (isCancelled()) return;
+                if (!segmentBuilder.haveTasks()) {
+                    buildWoolBorders(segment, player);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 5L);
+    }
+    private static @NotNull CuboidRegion getBlockVector3s(Location pos1, Location pos2, com.sk89q.worldedit.world.World weWorld) {
+        BlockVector3 min = BlockVector3.at(
+                Math.min(pos1.getBlockX(), pos2.getBlockX()),
+                Math.min(pos1.getBlockY(), pos2.getBlockY()),
+                Math.min(pos1.getBlockZ(), pos2.getBlockZ())
+        );
+
+        BlockVector3 max = BlockVector3.at(
+                Math.max(pos1.getBlockX(), pos2.getBlockX()),
+                Math.max(pos1.getBlockY(), pos2.getBlockY()),
+                Math.max(pos1.getBlockZ(), pos2.getBlockZ())
+        );
+
+        return new CuboidRegion(weWorld, min, max);
+    }
+
+
     public List<MapSegment> getSegments(Player player){
         return playerOwnedSegments.get(player);
+    }
+    public List<GamePlayer> getGamePlayers(){
+        return gamePlayers;
+    }
+    public GamePlayer getGamePlayer(Player player){
+        for(GamePlayer gamePlayer : gamePlayers){
+            if(gamePlayer.getPlayer().equals(player)){
+                return gamePlayer;
+            }
+        }
+        return null;
     }
     public List<Player> getPlayers(){
         return players;

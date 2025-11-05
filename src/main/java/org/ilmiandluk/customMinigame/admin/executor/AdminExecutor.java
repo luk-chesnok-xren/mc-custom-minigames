@@ -1,4 +1,4 @@
-package org.ilmiandluk.customMinigame.admin;
+package org.ilmiandluk.customMinigame.admin.executor;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -8,9 +8,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.Sign;
-import org.ilmiandluk.customMinigame.game.SignController;
+import org.ilmiandluk.customMinigame.game.repository.MapRepository;
+import org.ilmiandluk.customMinigame.game.repository.SignRepository;
 import org.ilmiandluk.customMinigame.game.map.Map;
-import org.ilmiandluk.customMinigame.game.map.MapController;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -57,11 +57,11 @@ public class AdminExecutor implements CommandExecutor {
             player.sendMessage(messageManager.getString("admin.createSignUsage"));
             return true;
         }
-        if(MapController.getMap(args[1]) == null) {
+        if(MapRepository.getMap(args[1]) == null) {
             player.sendMessage(messageManager.getString("admin.mapNotFound"));
             return false;
         }
-        Map map = MapController.getMap(args[1]);
+        Map map = MapRepository.getMap(args[1]);
         Set<Material> transparent = new HashSet<>();
         transparent.add(Material.AIR);
 
@@ -74,8 +74,8 @@ public class AdminExecutor implements CommandExecutor {
             sign.setLine(2, "Checking...");
             sign.setLine(3, "0/"+map.getMaxPlayers());
             sign.update();
-            SignController.addSignToFile(new Sign(map.getMapName(), map.getMaxPlayers(), targetBlock.getLocation()));
-            SignController.updateAllSigns();
+            SignRepository.addSignToFile(new Sign(map.getMapName(), map.getMaxPlayers(), targetBlock.getLocation()));
+            SignRepository.updateAllSigns();
         }
         else{
             player.sendMessage(messageManager.getString("admin.viewNotOnSign"));
@@ -97,7 +97,7 @@ public class AdminExecutor implements CommandExecutor {
             return true;
         }
         String mapName = args[1];
-        Map thisMap = MapController.getMap(mapName);
+        Map thisMap = MapRepository.getMap(mapName);
         if (thisMap == null) {
             player.sendMessage(messageManager.getString("admin.mapNotFound"));
             return true;
@@ -120,7 +120,7 @@ public class AdminExecutor implements CommandExecutor {
             maxPlayers = Integer.parseInt(args[2]);
             xSize = Integer.parseInt(args[3]);
             zSize = Integer.parseInt(args[4]);
-            MapController.createMap(mapName, player.getLocation(), maxPlayers, xSize, zSize);
+            MapRepository.createMap(mapName, player.getLocation(), maxPlayers, xSize, zSize);
             player.sendMessage(messageManager.getString("admin.mapWasCreated"));
         }catch (Exception e){
             player.sendMessage(messageManager.getString("admin.createMapUsage"));

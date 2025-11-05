@@ -1,6 +1,7 @@
-package org.ilmiandluk.customMinigame.game;
+package org.ilmiandluk.customMinigame.game.controller;
 
 import org.bukkit.entity.Player;
+import org.ilmiandluk.customMinigame.game.Lobby;
 import org.ilmiandluk.customMinigame.game.map.Map;
 
 import java.util.HashMap;

@@ -14,8 +14,6 @@ import com.sk89q.worldedit.session.ClipboardHolder;
 import org.bukkit.Location;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
-import org.ilmiandluk.customMinigame.game.structures.builds.Base;
-import org.ilmiandluk.customMinigame.game.structures.builds.MilitarySchool;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,8 +27,8 @@ import java.util.logging.Level;
 
 public class SegmentBuilder {
     private CustomMinigame plugin;
-    private final static List<CompletableFuture<Boolean>> activeFutures = Collections.synchronizedList(new ArrayList<>());
-    private final static HashMap<String, Clipboard> clipboardMap = new HashMap<>();
+    private final List<CompletableFuture<Boolean>> activeFutures = Collections.synchronizedList(new ArrayList<>());
+    private final HashMap<String, Clipboard> clipboardMap = new HashMap<>();
 
     public SegmentBuilder(CustomMinigame plugin) {
         this.plugin = plugin;
@@ -105,7 +103,7 @@ public class SegmentBuilder {
         }
     }
 
-    public static boolean haveTasks() {
+    public boolean haveTasks() {
         synchronized (activeFutures) {
             return !activeFutures.isEmpty();
         }

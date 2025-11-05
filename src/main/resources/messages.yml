@@ -31,9 +31,35 @@ game:
   exploreSegment: "%prefix% &aВы успешно исследовали территорию!"
   exploreTooFar: "%prefix% &cСегмент слишком далеко от вашей территории!"
   structureBuild: "%prefix% &aСтруктура была построена!"
+  notEnoughResourceToBuild: "%prefix% &7Для постройки не хватает: (&c%resources%&7)"
   structureMilitaryBuildError: "%prefix% &aЧтобы построить военную школу, нужна поляна 2 на 2."
   structureBuildHelp: "%prefix% &7Нажмите на сегмент с лесом, чтобы построить лесопилку. На сегмент со скалами для шахты. На пустырь 2 на 2 для военной школы."
   structureBuildOnlyOnOwn: "%prefix% &cВы можете строить только на своих сегментах!"
+  soldiersGone: "%prefix% &7Солдаты отправились на разведку! &c(-%count% солдата)"
+  soldiersBack: "%prefix% &7Ваши солдаты вернулись с разведки! &a(+%count% солдата)"
+  cantExplore: "%prefix% &cДля исследования территории необходимо отправить &e%count%&c солдат"
+  resourcesName:
+    wood: "Дерево"
+    stone: "Камень"
+    iron: "Железо"
+    precious: "Драг.металл"
+    people: "Население"
+    soldiers: "Солдат"
+    money: "Денег"
+  playerScoreboardTitle: "&f&lCustomMinigame"
+  playerScoreboard:
+    - '  '
+    - '&f&lPLAYER %color%&l%player%'
+    - '&7·Баланс: &f%money%'
+    - ' '
+    - '&f&lRESOURCES'
+    - '&7·Дерево: &f%wood%'
+    - '&7·Камень: &f%stone%'
+    - '&7·Железо: &f%iron%'
+    - '&7·Драг. металлы: &f%precious%'
+    - ''
+    - '&7·Население: &f%people%'
+    - '§7·Солдат: §f%soldiers%'
 scheme:
   notfound: "&cФайл схемы не найден: "
   unformatted: "&cНеизвестный формат схемы! "

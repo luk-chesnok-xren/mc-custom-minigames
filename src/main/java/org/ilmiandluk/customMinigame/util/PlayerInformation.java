@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
 
-/*
+/**
     Этот класс нужен просто для того, чтобы хранить информацию о
     содержимом инвентаря игрока, его локации и режиме игры
     до того, как он попал в игру.
@@ -25,7 +25,7 @@ public class PlayerInformation implements ConfigurationSerializable {
     private Player player;
     private Location playerLocation;
     private GameMode gameMode;
-    PlayerInformation(Player player){
+    public PlayerInformation(Player player){
         this.playerInventory = player.getInventory().getContents();
         this.playerLocation = player.getLocation();
         this.gameMode = player.getGameMode();

@@ -1,10 +1,14 @@
-package org.ilmiandluk.customMinigame.game;
+package org.ilmiandluk.customMinigame.game.controller;
 
 import org.bukkit.entity.Player;
+import org.ilmiandluk.customMinigame.game.Game;
 import org.ilmiandluk.customMinigame.game.map.Map;
+import org.ilmiandluk.customMinigame.game.player.GamePlayer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GameController {
     private static final HashMap<Map, Game>

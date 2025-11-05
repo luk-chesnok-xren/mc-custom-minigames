@@ -1,17 +1,17 @@
-package org.ilmiandluk.customMinigame.game;
+package org.ilmiandluk.customMinigame.game.repository;
 
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.ilmiandluk.customMinigame.CustomMinigame;
+import org.ilmiandluk.customMinigame.game.Sign;
 import org.ilmiandluk.customMinigame.game.map.Map;
-import org.ilmiandluk.customMinigame.game.map.MapController;
-import org.ilmiandluk.customMinigame.game.map.MapGameState;
+import org.ilmiandluk.customMinigame.game.enums.MapGameState;
 
 import java.io.File;
 import java.util.ArrayList;
 
-public class SignController {
+public class SignRepository {
     private static ArrayList<Sign> signs = new ArrayList<>();
     private static FileConfiguration signsConfig;
 
@@ -45,7 +45,7 @@ public class SignController {
                             signsConfig.getDouble(path + ".z"),
                             (float) signsConfig.getDouble(path + ".yaw"),
                             (float) signsConfig.getDouble(path + ".pitch"));
-                    Map map = MapController.getMap(mapName);
+                    Map map = MapRepository.getMap(mapName);
                     signs.add(new Sign(mapName, map.getMaxPlayers(), location));
                 }
             }
@@ -122,7 +122,7 @@ public class SignController {
     }
     public static void updateAllSigns(){
         for(Sign sign: signs){
-            String state = MapController.getMap(sign.getMapName()).getMapGameState().equals(MapGameState.IN_GAME) ? "§cIN_GAME" : "§aREADY";
+            String state = MapRepository.getMap(sign.getMapName()).getMapGameState().equals(MapGameState.IN_GAME) ? "§cIN_GAME" : "§aREADY";
             Location signLocation = sign.getLocation();
             org.bukkit.block.Sign thisSign = (org.bukkit.block.Sign) signLocation.getBlock().getState();
             thisSign.setLine(2, state);
@@ -134,7 +134,7 @@ public class SignController {
         for(Sign sign: signs){
             if(sign.getMapName().equals(map.getMapName())) {
                 sign.setCurrentPlayers(currentPlayers);
-                String state = MapController.getMap(sign.getMapName()).getMapGameState().equals(MapGameState.IN_GAME) ? "§cIN_GAME" : "§aREADY";
+                String state = MapRepository.getMap(sign.getMapName()).getMapGameState().equals(MapGameState.IN_GAME) ? "§cIN_GAME" : "§aREADY";
                 Location signLocation = sign.getLocation();
                 org.bukkit.block.Sign thisSign = (org.bukkit.block.Sign) signLocation.getBlock().getState();
                 thisSign.setLine(2, state);

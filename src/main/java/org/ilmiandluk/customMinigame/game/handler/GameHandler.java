@@ -2,8 +2,6 @@ package org.ilmiandluk.customMinigame.game.handler;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.ClickType;
@@ -16,39 +14,30 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.util.RayTraceResult;
 import org.ilmiandluk.customMinigame.game.Game;
-import org.ilmiandluk.customMinigame.game.GameController;
+import org.ilmiandluk.customMinigame.game.controller.GameController;
 
 import java.util.Set;
 
-public class GameHandler implements Listener {
+public class GameHandler  {
 
     private static final Set<Integer> PROTECTED_SLOTS = Set.of(0, 4);
 
+    public void handleOnAnyDamage(EntityDamageEvent event) {
+        event.setCancelled(true);
+    }
 
-    @EventHandler
-    public void onAnyDamage(EntityDamageEvent event) {
-        if(!(event.getEntity() instanceof Player)) return;
-        if (GameController.getGameWithPlayer(((Player) event.getEntity()).getPlayer()) != null) {
-            event.setCancelled(true);
-        }
+    public void handleOnPlayerHunger(FoodLevelChangeEvent event) {
+        event.setCancelled(true);
     }
-    @EventHandler
-    public void onPlayerHunger(FoodLevelChangeEvent event) {
-        if (event.getEntity() instanceof Player) {
-            if (GameController.getGameWithPlayer(((Player) event.getEntity()).getPlayer()) != null) {
-                event.setCancelled(true);
-            }
-        }
-    }
-    @EventHandler
-    public void onPlayerMovement(PlayerMoveEvent event) {
+
+    public void handleOnPlayerMovement(PlayerMoveEvent event) {
         Game game = GameController.getGameWithPlayer(event.getPlayer());
         if (game != null) {
             game.tpIfBorderCross(event.getPlayer());
         }
     }
-    @EventHandler
-    public void onExploreItem(PlayerInteractEvent event) {
+
+    public void handleOnExploreItem(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Game game = GameController.getGameWithPlayer(player);
         if(game != null) {
@@ -60,8 +49,8 @@ public class GameHandler implements Listener {
             }
         }
     }
-    @EventHandler
-    public void onBuildItem(PlayerInteractEvent event) {
+
+    public void handleOnBuildItem(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Game game = GameController.getGameWithPlayer(player);
         if(game != null) {
@@ -74,81 +63,49 @@ public class GameHandler implements Listener {
         }
     }
 
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
-        Player player = (Player) event.getWhoClicked();
-
-        if (GameController.getGameWithPlayer(player) != null) {
-            // Проверяем все возможные слоты
-            if (isProtectedSlot(event.getSlot()) ||
-                    isProtectedSlot(event.getRawSlot()) ||
-                    (event.getHotbarButton() != -1 && isProtectedSlot(event.getHotbarButton()))) {
-                event.setCancelled(true);
-            }
+    public void handleOnInventoryClick(InventoryClickEvent event) {
+        if (isProtectedSlot(event.getSlot()) ||
+                isProtectedSlot(event.getRawSlot()) ||
+                (event.getHotbarButton() != -1 && isProtectedSlot(event.getHotbarButton()))) {
+            event.setCancelled(true);
         }
     }
 
-    @EventHandler
-    public void onInventoryDrag(InventoryDragEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
-
-        if (GameController.getGameWithPlayer(((Player) event.getWhoClicked()).getPlayer()) != null) {
-            // Проверяем все затронутые слоты
-            for (int slot : event.getRawSlots()) {
-                if (isProtectedSlot(slot)) {
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onHotkeySwap(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
-        Player player = (Player) event.getWhoClicked();
-
-        if (GameController.getGameWithPlayer(player) != null) {
-            // Обрабатываем горячие клавиши (нажатие цифр)
-            if (event.getClick() == ClickType.NUMBER_KEY) {
-                int hotbarSlot = event.getHotbarButton();
-                if (isProtectedSlot(hotbarSlot)) {
-                    event.setCancelled(true);
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void playerDropEvent(PlayerDropItemEvent event) {
-        if (GameController.getGameWithPlayer(event.getPlayer()) != null) {
-            int slot = event.getPlayer().getInventory().getHeldItemSlot();
+    public void handleOnInventoryDrag(InventoryDragEvent event) {
+        for (int slot : event.getRawSlots()) {
             if (isProtectedSlot(slot)) {
                 event.setCancelled(true);
+                return;
             }
         }
     }
 
-    @EventHandler
-    public void playerSwapHandsEvent(PlayerSwapHandItemsEvent event) {
-        if (GameController.getGameWithPlayer(event.getPlayer()) != null) {
-            int slot = event.getPlayer().getInventory().getHeldItemSlot();
-            if (isProtectedSlot(slot)) {
+    public void handleOnHotkeySwap(InventoryClickEvent event) {
+        if (event.getClick() == ClickType.NUMBER_KEY) {
+            int hotbarSlot = event.getHotbarButton();
+            if (isProtectedSlot(hotbarSlot)) {
                 event.setCancelled(true);
             }
         }
     }
 
-    // (на всякий случай)
-    @EventHandler
-    public void onCreativeInventoryAction(InventoryCreativeEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
+    public void handlePlayerDropEvent(PlayerDropItemEvent event) {
+        int slot = event.getPlayer().getInventory().getHeldItemSlot();
+        if (isProtectedSlot(slot)) {
+            event.setCancelled(true);
+        }
+    }
 
-        if (GameController.getGameWithPlayer(((Player) event.getWhoClicked()).getPlayer()) != null) {
-            if (isProtectedSlot(event.getSlot())) {
+    public void handlePlayerSwapHandsEvent(PlayerSwapHandItemsEvent event) {
+        int slot = event.getPlayer().getInventory().getHeldItemSlot();
+        if (isProtectedSlot(slot)) {
+            event.setCancelled(true);
+        }
+    }
+
+    public void handleOnCreativeInventoryAction(InventoryCreativeEvent event) {
+        if (isProtectedSlot(event.getSlot())) {
                 event.setCancelled(true);
-            }
         }
     }
 
