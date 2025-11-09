@@ -2,7 +2,7 @@ name: CustomMinigame
 version: '1.0-SNAPSHOT'
 main: org.ilmiandluk.customMinigame.CustomMinigame
 api-version: '1.21'
-depend: [BetterModel, FastAsyncWorldEdit]
+depend: [FastAsyncWorldEdit]
 author: IlmiZeroth, luk-chesnok
 load: POSTWORLD
 commands:

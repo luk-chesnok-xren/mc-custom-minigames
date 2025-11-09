@@ -1,19 +1,28 @@
 package org.ilmiandluk.customMinigame.admin.executor;
 
+import net.minecraft.server.level.WorldServer;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.v1_21_R5.CraftWorld;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.Sign;
+import org.ilmiandluk.customMinigame.game.controller.ChunkController;
+import org.ilmiandluk.customMinigame.game.entity.Soldier;
+import org.ilmiandluk.customMinigame.game.enums.GameWoolColors;
+import org.ilmiandluk.customMinigame.game.player.GamePlayer;
 import org.ilmiandluk.customMinigame.game.repository.MapRepository;
 import org.ilmiandluk.customMinigame.game.repository.SignRepository;
 import org.ilmiandluk.customMinigame.game.map.Map;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -48,10 +57,30 @@ public class AdminExecutor implements CommandExecutor {
             case "createmap" -> handleCreateMap(((Player) sender).getPlayer(), args);
             case "createsign" -> handleCreateSign(((Player) sender).getPlayer(), args);
             case "generate" -> handleGenerateMap(((Player) sender).getPlayer(), args);
+            case "test" -> handleTestSoldier(((Player) sender).getPlayer(), args);
+            case "test1" -> handleTest1Soldier(((Player) sender).getPlayer(), args);
             default -> sendHelpMessage(sender);
         };
     }
 
+    private boolean handleTestSoldier(Player player, String... args){
+        GamePlayer gamePlayer = new GamePlayer(player, GameWoolColors.RED_WOOL);
+        ChunkController chunkController = new ChunkController(((CraftWorld) player.getWorld()).getHandle());
+        Soldier soldier1 = new Soldier(player.getLocation(), player.getLocation().add(100, 0, 0), gamePlayer, chunkController);
+        Soldier soldier2 = new Soldier(player.getLocation(), player.getLocation().add(100, 0, 0), gamePlayer, chunkController);
+        soldier1.spawnMob();
+        soldier2.spawnMob();
+        return true;
+    }
+    private boolean handleTest1Soldier(Player player, String... args){
+        GamePlayer gamePlayer = new GamePlayer(player, GameWoolColors.RED_WOOL);
+        ChunkController chunkController = new ChunkController(((CraftWorld) player.getWorld()).getHandle());
+        Soldier soldier1 = new Soldier(player.getLocation(), player.getLocation().add(100, 0, 0), gamePlayer, chunkController);
+        Soldier soldier2 = new Soldier(player.getLocation(), player.getLocation().add(100, 0, 0), null, chunkController);
+        soldier1.spawnMob();
+        soldier2.spawnMob();
+        return true;
+    }
     private boolean handleCreateSign(Player player, String... args){
         if (args.length < 2) {
             player.sendMessage(messageManager.getString("admin.createSignUsage"));

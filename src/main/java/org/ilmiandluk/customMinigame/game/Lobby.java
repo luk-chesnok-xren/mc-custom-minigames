@@ -1,5 +1,7 @@
 package org.ilmiandluk.customMinigame.game;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -50,7 +52,9 @@ public class Lobby {
                 if(isCancelled()) return;
                 if (seconds > 0) {
                     players.forEach(player -> {
-                        player.sendActionBar(messageManager.getString("lobby.timeToStart", seconds));
+                        player.spigot().
+                                sendMessage(ChatMessageType.ACTION_BAR,
+                                        new TextComponent(messageManager.getString("lobby.timeToStart", seconds)));
                         player.setExp(1f - (float) (seconds-1)/maxSeconds);
                         player.playSound((Entity) player, Sound.BLOCK_NOTE_BLOCK_BELL, 1f, 1f);
                     });
