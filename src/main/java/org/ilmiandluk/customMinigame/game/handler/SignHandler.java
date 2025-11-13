@@ -26,10 +26,6 @@ public class SignHandler {
         SignRepository.removeSign(new Sign("any", 0, event.getBlock().getLocation()));
     }
 
-    public void handleOnSignBreak(SignChangeEvent event){
-        event.setCancelled(true);
-    }
-
     public void handleInteractWithSign(PlayerInteractEvent event){
         for (Sign sign : SignRepository.getAllSigns()) {
             if (event.getClickedBlock().getLocation().equals(sign.getLocation())) {

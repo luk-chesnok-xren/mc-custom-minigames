@@ -9,3 +9,5 @@ commands:
   cmga:
     description: Plugin command for admins
     permission: cmg.admin
+  cmg:
+    description: Hidden command for players

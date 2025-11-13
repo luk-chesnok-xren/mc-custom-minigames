@@ -8,10 +8,7 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.*;
 import org.ilmiandluk.customMinigame.game.controller.GameController;
 import org.ilmiandluk.customMinigame.game.handler.GameHandler;
 
@@ -19,6 +16,15 @@ public class GameListener implements Listener {
     private final GameHandler gameHandler;
     public GameListener(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
+    }
+
+    @EventHandler
+    public void onPlayerDamageAnyone(EntityDamageEvent event) {
+        if(event.getDamageSource().getCausingEntity() instanceof Player player) {
+            if (GameController.getGameWithPlayer(player) != null) {
+                event.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler
@@ -41,12 +47,46 @@ public class GameListener implements Listener {
         gameHandler.handleOnPlayerMovement(event);
     }
     @EventHandler
-    public void onExploreItem(PlayerInteractEvent event) {
-        gameHandler.handleOnExploreItem(event);
+    public void onControlItem(PlayerInteractEvent event) {
+        gameHandler.handleOnControlItem(event);
     }
     @EventHandler
     public void onBuildItem(PlayerInteractEvent event) {
         gameHandler.handleOnBuildItem(event);
+    }
+    @EventHandler
+    public void onSpectatorItem(PlayerInteractEvent event) {
+        gameHandler.handleOnSpectatorItem(event);
+    }
+    @EventHandler
+    public void onStatusItem(PlayerInteractEvent event) {
+        gameHandler.handleOnStatusItem(event);
+    }
+    @EventHandler
+    public void onLeaveItem(PlayerInteractEvent event) {
+        gameHandler.handleOnLeaveItem(event);
+    }
+    @EventHandler
+    public void onShopItem(PlayerInteractEvent event){
+        gameHandler.handleOnShopItem(event);
+    }
+    @EventHandler
+    public void onAbilityItem(PlayerInteractEvent event){
+        gameHandler.handleAbilityItem(event);
+    }
+
+    @EventHandler
+    public void onLeave(PlayerQuitEvent event) {
+        if (GameController.getGameWithPlayer(event.getPlayer()) != null) {
+            gameHandler.handleLeave(event);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerChat(PlayerChatEvent event) {
+        if (GameController.getGameWithPlayer(event.getPlayer()) != null) {
+            gameHandler.handlePlayerChat(event);
+        }
     }
 
     @EventHandler

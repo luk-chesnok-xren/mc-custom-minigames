@@ -1,12 +1,24 @@
 package org.ilmiandluk.customMinigame.game.player;
 
+import org.bukkit.Location;
+import org.bukkit.scoreboard.Team;
 import org.ilmiandluk.customMinigame.CustomMinigame;
+import org.ilmiandluk.customMinigame.game.Game;
+import org.ilmiandluk.customMinigame.game.entity.Soldier;
+import org.ilmiandluk.customMinigame.game.enums.SoldierRelate;
+import org.ilmiandluk.customMinigame.game.map.MapSegment;
+import org.ilmiandluk.customMinigame.game.structures.builds.Base;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class PlayerResources {
     private final Random random = new Random();
+    private final Game game;
+    private final GamePlayer gamePlayer;
+    private final ConfigurationManager messageLoader = CustomMinigame.getInstance().getMessagesManager();
     private final ConfigurationManager configLoader = CustomMinigame.getInstance().getConfigManager();
     private long woodCount = random.
             nextLong(configLoader.
@@ -46,7 +58,12 @@ public class PlayerResources {
                     configLoader.
                             getInt("game.startPlayerResources.money.bound", 150));
 
-    PlayerResources(){}
+    private final List<Soldier> soldierList = new ArrayList<>();
+
+    PlayerResources(GamePlayer player, Game game){
+        this.gamePlayer = player;
+        this.game = game;
+    }
     public void addMoney(long count){
         this.moneyCount += count;
     }
@@ -67,8 +84,49 @@ public class PlayerResources {
     }
     public void addSoldiers(long count){
         this.soldiersCount+= count;
+        if(game == null) return;
+        if(count > 0){
+            gamePlayer.getPlayer().
+                    sendMessage(messageLoader.
+                            getString("game.addSoldier", (int) count));
+        }
+        else if(count < 0){
+            gamePlayer.getPlayer().
+                    sendMessage(messageLoader.
+                            getString("game.deadSoldier"));
+        }
     }
-
+    public void createSoldier(MapSegment segment){
+        Location location = segment.getLocation();
+        if(segment.getStructure() instanceof Base)
+            location = location.clone().add(20, 2, 20);
+        else
+            location = location.clone().add(0, 2, 0);
+        Soldier soldier = new Soldier(location,
+                gamePlayer,
+                game.getChunkController(),
+                segment);
+        segment.addSoldier(soldier.setRelate(SoldierRelate.OWNER));
+        //Set glowing
+        soldier.k(true);
+        soldier.spawnMob();
+        gamePlayer.getTeam().addEntry(soldier.getEntity().getUniqueId().toString());
+        for(GamePlayer otherPlayer: game.getGamePlayersWithout(gamePlayer)) {
+            Team otherTeam = otherPlayer.getPlayerTeam(gamePlayer.getPlayer());
+            if (otherTeam != null) {
+                if (soldier.getEntity() != null)
+                    otherTeam.addEntry(soldier.getEntity().getUniqueId().toString());
+            }
+        }
+        soldierList.add(soldier);
+    }
+    public List<Soldier> getSoldiers(){
+        return soldierList;
+    }
+    public void removeSoldier(Soldier soldier){
+        soldierList.remove(soldier);
+        addSoldiers(-1);
+    }
     public long getWoodCount() {
         return woodCount;
     }

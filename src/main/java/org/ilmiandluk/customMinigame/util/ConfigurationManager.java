@@ -7,6 +7,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.ilmiandluk.customMinigame.game.enums.Resources;
+import org.ilmiandluk.customMinigame.game.player.GamePlayer;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 
 import java.io.File;
@@ -94,6 +95,22 @@ public class ConfigurationManager {
                 replaceAll("%seconds%", String.valueOf(num))
                 .replaceAll("%count%", String.valueOf(num)): null;
     }
+    private String replacePlaceholders(String text, GamePlayer gamePlayer){
+        return text != null ? text.
+                replaceAll("%player%", gamePlayer.getPlayer().getName()).
+                replaceAll("%color%", gamePlayer.getColor().getColorString()): null;
+    }
+    private String replacePlaceholders(String text, GamePlayer gamePlayer, GamePlayer target){
+        return text != null ? text.
+                replaceAll("%color%%player%",
+                        gamePlayer.getColor().getColorString()
+                                +gamePlayer.getPlayer().getName()).
+                replaceAll("%color%%target%",
+                        target.getColor().getColorString()
+                                +target.getPlayer().getName())
+                .replaceAll("%player%", gamePlayer.getPlayer().getName())
+                .replaceAll("%target%", target.getPlayer().getName()): null;
+    }
     private String replaceResources(String text, Map<Resources, Integer> resourcesIntegerMap){
         StringBuilder result = new StringBuilder();
         for(Resources resource: resourcesIntegerMap.keySet()){
@@ -149,9 +166,14 @@ public class ConfigurationManager {
     public String getString(String path, Map<Resources, Integer> resourcesIntegerMap) {
         return replaceResources(translateColors(replacePlaceholders(getConfig().getString(path, path + " not found"))), resourcesIntegerMap);
     }
-
     public String getString(String path, String defaultValue) {
         return translateColors(replacePlaceholders(getConfig().getString(path, defaultValue)));
+    }
+    public String getString(String path, GamePlayer gamePlayer) {
+        return replacePlaceholders(getString(path), gamePlayer);
+    }
+    public String getString(String path, GamePlayer gamePlayer, GamePlayer target) {
+        return replacePlaceholders(getString(path), gamePlayer, target);
     }
     public String getString(String path, Player player){
         return replacePlaceholders(getString(path), player.getName());

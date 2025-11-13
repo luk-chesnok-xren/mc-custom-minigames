@@ -57,29 +57,8 @@ public class AdminExecutor implements CommandExecutor {
             case "createmap" -> handleCreateMap(((Player) sender).getPlayer(), args);
             case "createsign" -> handleCreateSign(((Player) sender).getPlayer(), args);
             case "generate" -> handleGenerateMap(((Player) sender).getPlayer(), args);
-            case "test" -> handleTestSoldier(((Player) sender).getPlayer(), args);
-            case "test1" -> handleTest1Soldier(((Player) sender).getPlayer(), args);
             default -> sendHelpMessage(sender);
         };
-    }
-
-    private boolean handleTestSoldier(Player player, String... args){
-        GamePlayer gamePlayer = new GamePlayer(player, GameWoolColors.RED_WOOL);
-        ChunkController chunkController = new ChunkController(((CraftWorld) player.getWorld()).getHandle());
-        Soldier soldier1 = new Soldier(player.getLocation(), player.getLocation().add(100, 0, 0), gamePlayer, chunkController);
-        Soldier soldier2 = new Soldier(player.getLocation(), player.getLocation().add(100, 0, 0), gamePlayer, chunkController);
-        soldier1.spawnMob();
-        soldier2.spawnMob();
-        return true;
-    }
-    private boolean handleTest1Soldier(Player player, String... args){
-        GamePlayer gamePlayer = new GamePlayer(player, GameWoolColors.RED_WOOL);
-        ChunkController chunkController = new ChunkController(((CraftWorld) player.getWorld()).getHandle());
-        Soldier soldier1 = new Soldier(player.getLocation(), player.getLocation().add(100, 0, 0), gamePlayer, chunkController);
-        Soldier soldier2 = new Soldier(player.getLocation(), player.getLocation().add(100, 0, 0), null, chunkController);
-        soldier1.spawnMob();
-        soldier2.spawnMob();
-        return true;
     }
     private boolean handleCreateSign(Player player, String... args){
         if (args.length < 2) {
@@ -102,6 +81,7 @@ public class AdminExecutor implements CommandExecutor {
             sign.setLine(1, map.getMapName());
             sign.setLine(2, "Checking...");
             sign.setLine(3, "0/"+map.getMaxPlayers());
+            sign.setWaxed(true);
             sign.update();
             SignRepository.addSignToFile(new Sign(map.getMapName(), map.getMaxPlayers(), targetBlock.getLocation()));
             SignRepository.updateAllSigns();

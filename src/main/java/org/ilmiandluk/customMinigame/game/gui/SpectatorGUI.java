@@ -18,19 +18,19 @@ import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 
 import java.util.List;
 
-public class PlayerListGUI implements ChestGUI{
+public class SpectatorGUI implements ChestGUI{
     private final static ConfigurationManager messageLoader =
             CustomMinigame.getInstance().getMessagesManager();
     private final Inventory inventory;
     private final GamePlayer player;
-    public PlayerListGUI(GamePlayer player){
+    public SpectatorGUI(GamePlayer player){
         this.player = player;
         this.inventory = createInventory();
     }
 
     @Override
     public Inventory createInventory() {
-        Inventory inv = Bukkit.createInventory(null, 27, messageLoader.getString("game.playerListGUI.title"));
+        Inventory inv = Bukkit.createInventory(null, 27, messageLoader.getString("game.spectatorGUI.title"));
         initializeItems(inv);
         return inv;
     }
@@ -45,8 +45,8 @@ public class PlayerListGUI implements ChestGUI{
             for(int i = 0; i < gamePlayers.size(); i++) {
                 GamePlayer gamePlayer = gamePlayers.get(i);
                 itemMeta.setOwningPlayer(gamePlayer.getPlayer());
-                itemMeta.setDisplayName(gamePlayer.replacePlaceholders(messageLoader.getString("game.playerListGUI.headName")));
-                List<String> lore = gamePlayer.replacePlaceholders(messageLoader.getStringList("game.playerListGUI.headLore"), player);
+                itemMeta.setDisplayName(gamePlayer.replacePlaceholders(messageLoader.getString("game.spectatorGUI.headName")));
+                List<String> lore = gamePlayer.replacePlaceholders(messageLoader.getStringList("game.spectatorGUI.headLore"), player);
                 itemMeta.setLore(lore);
                 itemStack.setItemMeta(itemMeta);
                 inv.setItem(i+9, itemStack);
@@ -83,7 +83,9 @@ public class PlayerListGUI implements ChestGUI{
         if(slot < 9 || slot > 17 || slot >= gamePlayers.size()+9) return;
 
         GamePlayer targetPlayer = GameController.getGameWithPlayer(player).getGamePlayersWithout(this.player).get(slot-9);
-        new PlayerInteractionGUI(this.player, targetPlayer).openInventory(player);
+        player.teleport(targetPlayer.getPlayer().getLocation());
+
+        closeInventory(player);
     }
 
     @Override

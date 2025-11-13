@@ -35,9 +35,51 @@ game:
   structureMilitaryBuildError: "%prefix% &aЧтобы построить военную школу, нужна поляна 2 на 2."
   structureBuildHelp: "%prefix% &7Нажмите на сегмент с лесом, чтобы построить лесопилку. На сегмент со скалами для шахты. На пустырь 2 на 2 для военной школы."
   structureBuildOnlyOnOwn: "%prefix% &cВы можете строить только на своих сегментах!"
-  soldiersGone: "%prefix% &7Солдаты отправились на разведку! &c(-%count% солдата)"
-  soldiersBack: "%prefix% &7Ваши солдаты вернулись с разведки! &a(+%count% солдата)"
+  soldiersGone: "%prefix% &7Солдаты отправились на разведку!"
   cantExplore: "%prefix% &cДля исследования территории необходимо отправить &e%count%&c солдат"
+  controlUnitsFreeError: "%prefix% &cНа выделенном сегменте нету ваших солдат!"
+  controlUnitsLeft: "%prefix% &7Вы выделили &e%count% &7солдат! Укажите в &eчате&7, скольких отправить и &eжмите ПКМ&7 по сегменту!"
+  controlUnitsRightError: "%prefix% &7Для начала, выделите солдат, которых хотите отправить. &eЛКМ по сегменту с солдатами."
+  controlUnitsRightCountError: "%prefix% &cУкажите в чате, сколько солдат из сегмента вы хотите выделить."
+  controlUnitsRightNotWar: "%prefix% &cЧтобы напасть на чужой сегмент, объявите владельцу войну!"
+  controlUnitsRightTooFar: "%prefix% &cВыделенный сегмент слишком далеко. Рядом должны быть союзные сегменты!"
+  controlUnitsSetCount: "%prefix% &7Вы выделили &e%count% солдат из сегмента!"
+  controlUnitsSetError: "%prefix% &cНа выделенном вами сегменте нет столько солдат!"
+  capitalNotDefine: "Не определена"
+  currencyNotDefine: "Не определена"
+  statusEnemy: "&cВОЙНА"
+  statusFriend: "&aСОЮЗ"
+  statusNeutral: "&eНЕЙТРАЛЬНЫ"
+  playerLeaveAlly: "%color%%player% &cпокинул союз!"
+  playerJoinAlly: "%color%%player% &aприсоединился к союзу!"
+  segmentUnderAttack: "%prefix% &cНа ваш сегмент напали!"
+  winOnSegment: "%prefix% &aВаши воины победили в сражении!"
+  catchSegment: "%prefix% &7Продержите солдатов одних &e%count% &7секунд для захвата!"
+  youAreLooseTitle: "%prefix%"
+  youAreLooseSubtitle: "&4Вы проиграли!"
+  youAreWinTitle: "%prefix%"
+  youAreWinSubtitle: "&aВы победили!"
+  youTeamWinTitle: "%prefix%"
+  youTeamWinSubtitle: "&aВаш союз победил!"
+  loseOnSegment: "%prefix% &4Ваши воины проиграли!"
+  allyAccept: "%prefix% &aВы присоединились к союзу!"
+  addSoldier: "%prefix% &aВ вашей армии пополнение на &e%count% &aсолдат."
+  deadSoldier: "%prefix% &cВаш солдат только что погиб!"
+  notRequestFromPlayer: "%prefix% &cВам не поступало запросов от этого игрока!"
+  playerSendAlly: "%color%%player% &eпригласил вас в союз! "
+  sendAlly: "&7Вы отправили приглашение в союз игроку %color%%player%"
+  startWarTitle: "%color%%player% &cобъявил войну %color%%target%"
+  segmentsMustNotMatch: "%prefix% &cВыделенные сегменты не должны совпадать!"
+  dislocateSoldiers: "%prefix% &7Солдаты начали перемещение на другой сегмент!"
+  dislocateToFriend: "%prefix% &aСолдаты перемещаются к союзнику!"
+  dislocateToEnemy: "%prefix% &cСолдаты атакуют противника!"
+  cantDislocate: "%prefix% &cВы не можете переместиться на этот сегмент!"
+  acceptButton: "&a[ПРИНЯТЬ]"
+  acceptButtonHover: "&aНажмите, чтобы принять приглашение"
+  helpMessage: "%prefix% &7Используйте: &e/cmg accept <ник>&7, чтобы присоединиться к союзу!"
+  notInGame: "%prefix% &cВы не в игре!"
+  thisPlayerNotInGame: "%prefix% &cЭтот пользователь вне игры!"
+  tooManyFriends: "%prefix% &cВ союзе слишком много игроков, вы не можете присоединиться!"
   resourcesName:
     wood: "Дерево"
     stone: "Камень"
@@ -59,7 +101,70 @@ game:
     - '&7·Драг. металлы: &f%precious%'
     - ''
     - '&7·Население: &f%people%'
-    - '§7·Солдат: §f%soldiers%'
+    - '&7·Солдат: §f%soldiers%'
+    - '  '
+    - '&7Валюта: &f%currency%'
+    - '&7Столица: &f%capital%'
+  spectatorScoreboardTitle: "&f&lCustomMinigame"
+  spectatorScoreboard:
+    - '  '
+    - '&f&lВЫ НАБЛЮДАТЕЛЬ!'
+    - '&f&lPLAYER %color%&l%player%'
+  playerInteractionGUI:
+    title: "Взаимодействия с %color%%player%"
+    warItemDefault: "Начать войну"
+    warItemDefaultLore: "Нажмите, чтобы объявить войну!"
+    warItemIfFriend: "Вы не можете начать войну"
+    warItemIfFriendLore: "Сначала разорвите союз, чтобы начать войну!"
+    warItemIfWar: "Война уже началась!"
+    warItemIfWarLore: "Война уже началась. И вы ничего не можете с этим сделать..."
+    friendItemDefault: "Предложить союз"
+    friendItemDefaultLore: "Нажмите, чтобы отправить запрос на союз игроку"
+    friendItemIfFriend: "Разорвать союз"
+    friendItemIfFriendLore: "Нажмите, чтобы разорвать союз!"
+    friendItemIfWar: "Вы воюете!"
+    friendItemIfWarLore: "Между вами война. Вы ничего не можете с этим сделать..."
+  playerListGUI:
+    title: "ОТЧЕТЫ ОБ ИГРОКАХ"
+    headName: "&7Отчет об %color%%player%"
+    headLore:
+      - '    '
+      - '&7Ресурсы:'
+      - '&7·Дерево: &f%wood%'
+      - '&7·Камень: &f%stone%'
+      - '&7·Железо: &f%iron%'
+      - '&7·Драг. металлы: &f%precious%'
+      - '   '
+      - '&7·Население: &f%people%'
+      - '&7·Солдат: §f%soldiers%'
+      - '  '
+      - '&7Валюта: &f%currency%'
+      - '&7Столица: &f%capital%'
+      - ' '
+      - '&7СТАТУС С ВАМИ: %status%'
+      - ''
+      - 'Нажмите для взаимодействия'
+  spectatorGUI:
+    title: "ТЕЛЕПОРТИРОВАТЬСЯ К ИГРОКУ"
+    headName: "&7Телепортироваться к %color%%player%"
+    headLore:
+      - '    '
+      - '&7Ресурсы:'
+      - '&7·Дерево: &f%wood%'
+      - '&7·Камень: &f%stone%'
+      - '&7·Железо: &f%iron%'
+      - '&7·Драг. металлы: &f%precious%'
+      - '   '
+      - '&7Валюта: &f%currency%'
+      - '&7Столица: &f%capital%'
+      - ' '
+      - 'Нажмите, для телепортации'
+  shopGUI:
+    title: "МАГАЗИН"
+    successful: "%prefix% &aВы успешно приобрели товар!"
+    error: "%prefix% &cУ вас не хватает денег на счету..."
+  abilitySuccessful: "%prefix% &eВы успешно применили способность!"
+  abilityError: "%prefix% &cУ вас не получилось применить способность."
 scheme:
   notfound: "&cФайл схемы не найден: "
   unformatted: "&cНеизвестный формат схемы! "

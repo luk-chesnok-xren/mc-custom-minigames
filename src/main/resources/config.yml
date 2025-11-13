@@ -14,10 +14,16 @@ game:
   populationGrowthGuaranteed: 1
   populationGrowthCoefficient: 0.15
   soldiersPerPayday: 1
-
+  payDayTime: 60
   soldiersToExplore: 2
-  exploreTime: 20
-
+  timeToCatchSegment: 20
+  timeToCatchBase: 60
+  healAbilityItemCost: 200
+  speedAbilityItemCost: 500
+  strengthAbilityItemCost: 1000
+  teleportAbilityItemCost: 5000
+  rocketAbilityItemCost: 5000
+  nuclearAbilityItemCost: 30000
   startPlayerResources:
     wood:
       origin: 20

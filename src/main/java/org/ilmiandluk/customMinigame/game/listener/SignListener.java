@@ -26,16 +26,6 @@ public class SignListener implements Listener{
             }
         }
     }
-    @EventHandler
-    public void onSignBreak(SignChangeEvent event){
-        if(event.getBlock().getState() instanceof org.bukkit.block.Sign) {
-            for (Sign sign : SignRepository.getAllSigns()) {
-                if (event.getBlock().getLocation().equals(sign.getLocation())){
-                    signHandler.handleOnSignBreak(event);
-                }
-            }
-        }
-    }
 
     @EventHandler
     public void interactWithSign(PlayerInteractEvent event){

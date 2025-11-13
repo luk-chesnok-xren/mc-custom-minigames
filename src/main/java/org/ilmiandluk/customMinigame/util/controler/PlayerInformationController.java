@@ -22,6 +22,7 @@ public class PlayerInformationController {
         if(information == null){
             return;
         }
+        player.setInvisible(false);
         player.setFlySpeed(0.5f);
         player.setAllowFlight(false);
         player.setFlying(false);
