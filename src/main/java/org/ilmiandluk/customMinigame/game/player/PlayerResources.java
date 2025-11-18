@@ -123,9 +123,17 @@ public class PlayerResources {
     public List<Soldier> getSoldiers(){
         return soldierList;
     }
+    public void addSoldier(Soldier soldier){
+        if(!soldierList.contains(soldier)) {
+            soldierList.add(soldier);
+            addSoldiers(1);
+        }
+    }
     public void removeSoldier(Soldier soldier){
-        soldierList.remove(soldier);
-        addSoldiers(-1);
+        if(soldierList.contains(soldier)) {
+            soldierList.remove(soldier);
+            addSoldiers(-1);
+        }
     }
     public long getWoodCount() {
         return woodCount;

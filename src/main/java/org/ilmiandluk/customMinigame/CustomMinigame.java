@@ -13,7 +13,6 @@ import org.ilmiandluk.customMinigame.game.repository.MapRepository;
 import org.ilmiandluk.customMinigame.game.repository.SignRepository;
 import org.ilmiandluk.customMinigame.game.handler.GameHandler;
 import org.ilmiandluk.customMinigame.game.handler.SignHandler;
-import org.ilmiandluk.customMinigame.game.map.SegmentBuilder;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 
 import java.util.logging.Level;

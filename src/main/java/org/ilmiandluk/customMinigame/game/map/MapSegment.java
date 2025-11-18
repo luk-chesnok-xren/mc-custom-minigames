@@ -16,8 +16,6 @@ import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 import org.ilmiandluk.customMinigame.game.structures.BuildStructure;
 import org.ilmiandluk.customMinigame.game.structures.builds.Base;
 import org.ilmiandluk.customMinigame.game.structures.builds.MilitarySchool;
-import org.ilmiandluk.customMinigame.game.structures.builds.Mineshaft;
-import org.ilmiandluk.customMinigame.game.structures.builds.Sawmill;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -30,6 +28,7 @@ public class MapSegment {
     private Player owner;
     private final int X;
     private final int Z;
+    private int originX = 0, originZ = 0;
 
     private final List<Soldier> soldiers;
 
@@ -54,6 +53,16 @@ public class MapSegment {
         this.X = currentX;
         this.Z = currentZ;
     }
+    public MapSegment(AbstractStructure structure, Location location, Player owner, int currentX, int currentZ, int originX, int originZ) {
+        this.structure = structure;
+        this.location = location;
+        this.owner = owner;
+        this.soldiers = new ArrayList<>();
+        this.X = currentX;
+        this.Z = currentZ;
+        this.originX = originX;
+        this.originZ = originZ;
+    }
 
     public AbstractStructure getStructure() {
         return structure;
@@ -65,7 +74,20 @@ public class MapSegment {
     public Location getLocation() {
         return location.clone();
     }
-
+    public int getOriginX() {
+        return originX;
+    }
+    public int getOriginZ() {
+        return originZ;
+    }
+    public MapSegment setOriginX(int x){
+        this.originX = x;
+        return this;
+    }
+    public MapSegment setOriginZ(int z){
+        this.originZ = z;
+        return this;
+    }
     public Player getOwner() {
         return owner;
     }
@@ -172,77 +194,65 @@ public class MapSegment {
                         cancel();
                         return;
                     }
-                    if(structure instanceof BuildStructure){
-                        if(structure instanceof Base){
-                            if(gameOwner.getPlayerStructures().getBaseCount() <= 1)
-                                game.playerLoose(gameOwner, enemy);
-                        }
-                        else if(structure instanceof MilitarySchool){
+                    if(structure instanceof BuildStructure) {
+                        if (structure instanceof MilitarySchool) {
                             MapSegment[][] allSegments = gameOwner.getGame().getMap().getSegments();
                             MapSegment nearest = gameOwner.getNearestMilitarySchoolSegment(location);
-                            if(nearest != null){
-                                    MapSegment segmentXz = allSegments[nearest.getX()][nearest.getZ()+1];
-                                    MapSegment segmentxZ = allSegments[nearest.getX()+1][nearest.getZ()];
-                                    MapSegment segmentxz = allSegments[nearest.getX()+1][nearest.getZ()+1];
+                            if (nearest != null) {
+                                MapSegment segmentXz = allSegments[nearest.getX()][nearest.getZ() + 1];
+                                MapSegment segmentxZ = allSegments[nearest.getX() + 1][nearest.getZ()];
+                                MapSegment segmentxz = allSegments[nearest.getX() + 1][nearest.getZ() + 1];
 
-                                    nearest.changeOwner(enemy);
-                                    segmentXz.changeOwner(enemy);
-                                    segmentxz.changeOwner(enemy);
-                                    segmentxZ.changeOwner(enemy);
+                                nearest.changeOwner(enemy);
+                                segmentXz.changeOwner(enemy);
+                                segmentxz.changeOwner(enemy);
+                                segmentxZ.changeOwner(enemy);
 
-                                    game.removeSegmentFromPlayer(nearest, gameOwner.getPlayer());
-                                    game.removeSegmentFromPlayerFromMap(segmentxz, gameOwner.getPlayer());
-                                    game.removeSegmentFromPlayerFromMap(segmentxZ, gameOwner.getPlayer());
-                                    game.removeSegmentFromPlayerFromMap(segmentXz, gameOwner.getPlayer());
+                                game.removeSegmentFromPlayer(nearest, gameOwner.getPlayer());
+                                game.removeSegmentFromPlayerFromMap(segmentxz, gameOwner.getPlayer());
+                                game.removeSegmentFromPlayerFromMap(segmentxZ, gameOwner.getPlayer());
+                                game.removeSegmentFromPlayerFromMap(segmentXz, gameOwner.getPlayer());
 
-                                    game.addSegmentToPlayer(nearest, enemy.getPlayer());
-                                    game.addSegmentToPlayerFromMap(segmentxz, enemy.getPlayer());
-                                    game.addSegmentToPlayerFromMap(segmentxZ, enemy.getPlayer());
-                                    game.addSegmentToPlayerFromMap(segmentXz, enemy.getPlayer());
+                                game.addSegmentToPlayer(nearest, enemy.getPlayer());
+                                game.addSegmentToPlayerFromMap(segmentxz, enemy.getPlayer());
+                                game.addSegmentToPlayerFromMap(segmentxZ, enemy.getPlayer());
+                                game.addSegmentToPlayerFromMap(segmentXz, enemy.getPlayer());
 
-                                    gameOwner.getPlayerStructures().removeSchoolSegment(nearest);
-                                    enemy.getPlayerStructures().addSchoolSegment(nearest);
+                                gameOwner.getPlayerStructures().removeSchoolSegment(nearest);
+                                enemy.getPlayerStructures().addSchoolSegment(nearest);
 
-                                    new BukkitRunnable() {
-                                        @Override
-                                        public void run(){
-                                            segmentXz.interruptCatchSegment();
-                                            segmentxZ.interruptCatchSegment();
-                                            segmentxz.interruptCatchSegment();
-                                            nearest.interruptCatchSegment();
-                                        }
-                                    }.runTaskLater(CustomMinigame.getInstance(), 1);
-                                    cancel();
-                                    return;
+                                new BukkitRunnable() {
+                                    @Override
+                                    public void run() {
+                                        segmentXz.interruptCatchSegment();
+                                        segmentxZ.interruptCatchSegment();
+                                        segmentxz.interruptCatchSegment();
+                                        nearest.interruptCatchSegment();
+                                    }
+                                }.runTaskLater(CustomMinigame.getInstance(), 1);
+                                cancel();
+                                return;
                             }
                         }
 
-                    }
-
-                    if(structure instanceof Base){
-                        MapSegment[][] allSegments = gameOwner.getGame().getMap().getSegments();
-                        MapSegment mainBaseSegment = gameOwner.getGame().getSegments(owner).getFirst();
-                        MapSegment xzBaseSegment = allSegments[mainBaseSegment.getX()+1][mainBaseSegment.getZ()+1];
-                        MapSegment xZBaseSegment = allSegments[mainBaseSegment.getX()+1][mainBaseSegment.getZ()];
-                        MapSegment XzBaseSegment = allSegments[mainBaseSegment.getX()][mainBaseSegment.getZ()+1];
-
-                        game.removeSegmentFromPlayer(mainBaseSegment, gameOwner.getPlayer());
-                        game.removeSegmentFromPlayerFromMap(xzBaseSegment, gameOwner.getPlayer());
-                        game.removeSegmentFromPlayerFromMap(xZBaseSegment, gameOwner.getPlayer());
-                        game.removeSegmentFromPlayerFromMap(XzBaseSegment, gameOwner.getPlayer());
-
-                        game.addSegmentToPlayer(mainBaseSegment, enemy.getPlayer());
-                        game.addSegmentToPlayerFromMap(xzBaseSegment, enemy.getPlayer());
-                        game.addSegmentToPlayerFromMap(xZBaseSegment, enemy.getPlayer());
-                        game.addSegmentToPlayerFromMap(XzBaseSegment, enemy.getPlayer());
-
-                        mainBaseSegment.changeOwner(enemy);
-                        xzBaseSegment.changeOwner(enemy);
-                        xZBaseSegment.changeOwner(enemy);
-                        XzBaseSegment.changeOwner(enemy);
-
-                        cancel();
-                        return;
+                        if (structure instanceof Base) {
+                            List<MapSegment> baseSegments = gameOwner.getGame().getStructureParts(MapSegment.this);
+                            for (int i = 0; i < 4; i++) {
+                                if (i == 0) {
+                                    game.addSegmentToPlayer(baseSegments.get(i), enemy.getPlayer());
+                                    game.removeSegmentFromPlayer(baseSegments.get(i), gameOwner.getPlayer());
+                                    baseSegments.get(i).changeOwner(enemy);
+                                    continue;
+                                }
+                                game.addSegmentToPlayerFromMap(baseSegments.get(i), enemy.getPlayer());
+                                game.removeSegmentFromPlayerFromMap(baseSegments.get(i), gameOwner.getPlayer());
+                                baseSegments.get(i).changeOwner(enemy);
+                            }
+                            if(gameOwner.getPlayerStructures().getBaseCount() < 1)
+                                game.playerLoose(gameOwner, enemy);
+                            cancel();
+                            return;
+                        }
                     }
                     changeOwner(enemy);
                     game.removeSegmentFromPlayer(MapSegment.this, gameOwner.getPlayer());

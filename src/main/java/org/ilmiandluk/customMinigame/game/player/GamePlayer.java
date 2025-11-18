@@ -12,10 +12,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.Game;
-import org.ilmiandluk.customMinigame.game.entity.Soldier;
 import org.ilmiandluk.customMinigame.game.enums.GameWoolColors;
 import org.ilmiandluk.customMinigame.game.enums.Resources;
-import org.ilmiandluk.customMinigame.game.enums.SoldierRelate;
 import org.ilmiandluk.customMinigame.game.map.MapSegment;
 import org.ilmiandluk.customMinigame.game.player.inventory.*;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
@@ -52,6 +50,7 @@ public class GamePlayer {
 
     private final List<GamePlayer> friendList = new ArrayList<>();
     private final List<GamePlayer> enemyList = new ArrayList<>();
+    private final List<MapSegment> mapSegments = new ArrayList<>();
 
     private final Set<GamePlayer> friendInvites = new HashSet<>();
 
@@ -94,6 +93,28 @@ public class GamePlayer {
     }
     public Team getTeam(){
         return team;
+    }
+    public List<MapSegment> getMapSegments(){
+        return mapSegments;
+    }
+    public void addMapSegment(MapSegment mapSegment){
+        mapSegments.add(mapSegment);
+    }
+    public void removeMapSegment(MapSegment mapSegment){
+        mapSegments.remove(mapSegment);
+    }
+    public List<MapSegment> getNumberedBase(int number){
+        int count = 0;
+        List<MapSegment> baseSegments = new ArrayList<>();
+        for(MapSegment mapSegment : mapSegments){
+            if(mapSegment.getStructure() instanceof Base){
+                if(count < 4*number && count >= 4 * (number-1)){
+                    baseSegments.add(mapSegment);
+                }
+                count++;
+            }
+        }
+        return baseSegments;
     }
     public void createPlayerTeam(GamePlayer player){
         Team team = gameScoreboard.registerNewTeam(player.getPlayer().getName());
@@ -143,6 +164,7 @@ public class GamePlayer {
         player.getInventory().clear();
         player.setInvisible(true);
         new LeaveItem().giveItemToPlayer(player);
+        new SpectatorItem().giveItemToPlayer(player);
 
         scoreboardUpdateTask.cancel();
         payDayTask.cancel();
@@ -189,14 +211,14 @@ public class GamePlayer {
         playerResources.addStone(anotherPlayer.getPlayerResources().getStoneCount());
         playerResources.addPeople(anotherPlayer.getPlayerResources().getPeopleCount());
         playerResources.addPreciousMetals(anotherPlayer.getPlayerResources().getPreciousMetalsCount());
-        playerResources.addSoldiers(anotherPlayer.getPlayerResources().getSoldiersCount());
 
-        anotherPlayer.getPlayerStructures().getSchoolMapSegments().forEach(segment -> {
+        List<MapSegment> copy = new ArrayList<>(anotherPlayer.getPlayerStructures().getSchoolMapSegments());
+        for (MapSegment segment : copy) {
             playerStructures.addSchoolSegment(segment);
             playerStructures.addStructure(segment.getStructure());
-        });
+        }
         playerStructures.setSawmillCount(anotherPlayer.getPlayerStructures().getSawmillCount()+playerStructures.getSawmillCount());
-        playerStructures.setMineshaftCount(anotherPlayer.getPlayerStructures().getSawmillCount()+playerStructures.getMineshaftCount());
+        playerStructures.setMineshaftCount(anotherPlayer.getPlayerStructures().getMineshaftCount()+playerStructures.getMineshaftCount());
 
 
     }
@@ -227,10 +249,6 @@ public class GamePlayer {
                 getPlayerResources().createSoldier(segment);
             }
         }
-    }
-    public boolean canExplore(){
-        int count = configLoader.getInt("game.soldiersToExplore", 2);
-        return playerResources.getSoldiersCount() >= count;
     }
     public PlayerResources getPlayerResources() {
         return playerResources;

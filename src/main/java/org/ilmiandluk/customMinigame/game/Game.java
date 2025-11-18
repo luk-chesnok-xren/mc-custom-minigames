@@ -9,19 +9,13 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
 import com.sk89q.worldedit.world.block.BlockTypes;
-import net.minecraft.util.datafix.fixes.ScoreboardDisplayNameFix;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_21_R5.CraftWorld;
-import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.controller.ChunkController;
 import org.ilmiandluk.customMinigame.game.controller.GameController;
@@ -31,11 +25,8 @@ import org.ilmiandluk.customMinigame.game.enums.SoldierState;
 import org.ilmiandluk.customMinigame.game.map.BoundingBox;
 import org.ilmiandluk.customMinigame.game.player.GamePlayer;
 import org.ilmiandluk.customMinigame.game.player.HandledSegment;
-import org.ilmiandluk.customMinigame.game.player.inventory.StatusItem;
 import org.ilmiandluk.customMinigame.game.repository.SignRepository;
 import org.ilmiandluk.customMinigame.game.enums.GameWoolColors;
-import org.ilmiandluk.customMinigame.game.player.inventory.BuildItem;
-import org.ilmiandluk.customMinigame.game.player.inventory.ControlItem;
 import org.ilmiandluk.customMinigame.game.map.Map;
 import org.ilmiandluk.customMinigame.game.enums.MapGameState;
 import org.ilmiandluk.customMinigame.game.map.MapSegment;
@@ -62,7 +53,6 @@ public class Game {
     private final BoundingBox boundingBox;
     private final List<Player> players;
     private final SegmentBuilder segmentBuilder;
-    private final HashMap<Player, List<MapSegment>> playerOwnedSegments = new HashMap<>();
     private final HashMap<Player, GameWoolColors> playerColors = new HashMap<>();
     private static final HashMap<Player, HandledSegment> handledSegment = new HashMap<>();
     private final ChunkController chunkController;
@@ -155,7 +145,7 @@ public class Game {
                 sendTitle(messageManager.getString("game.startTitle"),
                         messageManager.getString("game.startSubtitle"),
                         0,5*20,0);
-                    player.getPlayer().teleport(playerOwnedSegments.get(player.getPlayer()).getFirst().getLocation().clone().add(0, 40, 0));
+                    player.getPlayer().teleport(player.getNumberedBase(1).getFirst().getLocation().clone().add(0, 40, 0));
         }
         );
         updateAllBorders();
@@ -169,16 +159,13 @@ public class Game {
         );
         if(everyoneIsAlly || endPlayers.size() == 1) {
             gameMap.setMapGameState(MapGameState.READY);
-            new ArrayList<>(gamePlayers).forEach(player -> {
-                playerLeave(player);
-                new ArrayList<>(player.getPlayerResources().getSoldiers()).
-                        forEach(soldier -> soldier.x(0));
-            });
+            new ArrayList<>(gamePlayers).forEach(this::playerLeave);
             playersWin(endPlayers);
             GameController.deleteGame(this.gameMap);
             SignRepository.updateSignForMap(gameMap, 0);
             chunkController.cleanup();
             chunkController.stopWorking();
+            killEveryoneOnSegments();
         }
     }
     public void playersWin(List<GamePlayer> gamePlayers){
@@ -199,13 +186,16 @@ public class Game {
     public void playerLoose(GamePlayer looser, @Nullable GamePlayer winner){
         looser.getPlayer().sendTitle(messageManager.getString("game.youAreLooseTitle"),
                 messageManager.getString("game.youAreLooseSubtitle"), 0, 4*20, 0);
+        List<Soldier> looserSoldiers = new ArrayList<>(looser.getPlayerResources().getSoldiers());
         if(winner != null) {
             winner.winAnotherPlayer(looser);
-            playerOwnedSegments.get(winner.getPlayer()).addAll(playerOwnedSegments.get(looser.getPlayer()));
-            playerOwnedSegments.remove(looser.getPlayer());
+            winner.getMapSegments().addAll(looser.getMapSegments());
+            looser.getMapSegments().clear();
+            looserSoldiers.forEach(soldier -> soldier.changeOwner(winner));
             Arrays.stream(getMap().getSegments()).forEach(s -> Arrays.stream(s).filter(segment -> segment.getOwner() == looser.getPlayer()).forEach(segment -> segment.setOwner(winner.getPlayer())));
         }
         else{
+            looserSoldiers.forEach(soldier -> soldier.changeOwner(null));
             Arrays.stream(getMap().getSegments()).forEach(s -> Arrays.stream(s).filter(segment -> segment.getOwner() == looser.getPlayer()).forEach(segment -> segment.setOwner(null)));
         }
 
@@ -338,36 +328,47 @@ public class Game {
      */
     synchronized public void addSegmentToPlayer(MapSegment segment, Player player){
         if(!players.contains(player)) return;
-        if(!playerOwnedSegments.containsKey(player)){
-            playerOwnedSegments.put(player, new ArrayList<>());
-        }
-        List<MapSegment> segments = playerOwnedSegments.get(player);
+        List<MapSegment> segments = getGamePlayer(player).getMapSegments();
         segments.add(segment);
         segment.setOwner(player);
         getGamePlayer(player).addStructure(segment.getStructure());
+        if(!segment.getSoldiers().isEmpty()){
+            segment.getSoldiers().stream().
+                    filter(s -> s.getGamePlayer() == null).
+                    forEach(s -> s.changeOwner(getGamePlayer(player)));
+        }
         buildWoolBorders(segment, player);
     }
+    public void killEveryoneOnSegments(){
+        MapSegment[][] allSegments = gameMap.getSegments();
+        for(MapSegment[] mapSegments : allSegments){
+            for(MapSegment segment : mapSegments){
+                new ArrayList<>(segment.getSoldiers()).forEach(Soldier::doRocket);
+            }
+        }
+    }
+
     /**
      * Стоит вызывать только из Map, при инициализации сегментов.
      */
     public void addSegmentToPlayerFromMap(MapSegment segment, Player player){
         if(!players.contains(player)) return;
-        if(!playerOwnedSegments.containsKey(player)){
-            playerOwnedSegments.put(player, new ArrayList<>());
+        if(!segment.getSoldiers().isEmpty()){
+            segment.getSoldiers().stream().
+                    filter(s -> s.getGamePlayer() == null).
+                    forEach(s -> s.changeOwner(getGamePlayer(player)));
         }
-        playerOwnedSegments.get(player).add(segment);
+        getGamePlayer(player).getMapSegments().add(segment);
     }
 
     public void removeSegmentFromPlayer(MapSegment segment, Player player){
-        if(playerOwnedSegments.containsKey(player)){
-            playerOwnedSegments.get(player).remove(segment);
-            getGamePlayer(player).removeStructure(segment.getStructure());
-        }
+        if(!players.contains(player)) return;
+        getGamePlayer(player).getMapSegments().remove(segment);
+        getGamePlayer(player).removeStructure(segment.getStructure());
     }
     public void removeSegmentFromPlayerFromMap(MapSegment segment, Player player){
-        if(playerOwnedSegments.containsKey(player)){
-            playerOwnedSegments.get(player).remove(segment);
-        }
+        if(!players.contains(player)) return;
+        getGamePlayer(player).getMapSegments().remove(segment);
     }
 
     /**
@@ -433,6 +434,18 @@ public class Game {
         }
         return null;
     }
+    public List<MapSegment> getStructureParts(MapSegment segment){
+        List<MapSegment> result = new ArrayList<>();
+        MapSegment[][] allSegments = gameMap.getSegments();
+        int originX = segment.getX()-segment.getOriginX();
+        int originZ = segment.getZ()-segment.getOriginZ();
+        for(int x = originX; x < originX+2; x++){
+            for(int z = originZ; z < originZ+2; z++){
+                result.add(allSegments[x][z]);
+            }
+        }
+        return result;
+    }
     public void controlUnits(Action action, MapSegment segment, Player player){
         if(action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
             List<Soldier> freeSoldiers = segment.getFreePlayerSoldiers(getGamePlayer(player));
@@ -463,8 +476,32 @@ public class Game {
                         player.sendMessage(messageManager.getString("game.cantExplore", configManager.getInt("game.soldiersToExplore",2)));
                         return;
                     }
-                    // Мгновенно присваиваем территорию (во избежание любых конфликтов)
-                    addSegmentToPlayer(segment, player);
+                    if(segment.getStructure() instanceof MilitarySchool){
+                        List<MapSegment> militarySchoolSegments = getStructureParts(segment);
+                        for(int i = 0; i<militarySchoolSegments.size(); i++){
+                            if(i == 0){
+                                addSegmentToPlayer(militarySchoolSegments.get(i), player);
+                                getGamePlayer(player).getPlayerStructures().addSchoolSegment(militarySchoolSegments.get(i));
+                                continue;
+                            }
+                            addSegmentToPlayerFromMap(militarySchoolSegments.get(i), player);
+                            militarySchoolSegments.get(i).setOwner(player);
+                        }
+                    }
+                    else if(segment.getStructure() instanceof Base){
+                        List<MapSegment> baseSegments = getStructureParts(segment);
+                        for(int i = 0; i<baseSegments.size(); i++){
+                            if(i == 0){
+                                addSegmentToPlayer(baseSegments.get(i), player);
+                                continue;
+                            }
+                            addSegmentToPlayerFromMap(baseSegments.get(i), player);
+                            baseSegments.get(i).setOwner(player);
+                        }
+                    }else {
+                        // Мгновенно присваиваем территорию (во избежание любых конфликтов)
+                        addSegmentToPlayer(segment, player);
+                    }
                     player.sendMessage(messageManager.getString("game.soldiersGone"));
                     // Берем выделенных солдат, отправляем их из одного сегмента в другой
                     List<Soldier> handledSoldiers =
@@ -544,20 +581,20 @@ public class Game {
      * и теперь нужно перерисовать все границы, чтобы они отображались верно.
      */
     public void updateAllBorders(){
-        for(java.util.Map.Entry<Player, List<MapSegment>> entry : playerOwnedSegments.entrySet()){
-            for (int i = 0; i < entry.getValue().size(); i++) {
+        for(GamePlayer player: getGamePlayers()){
+            for (int i = 0; i < player.getMapSegments().size(); i++) {
                 if(i==0){
-                    buildWoolBorders(entry.getValue().get(i), entry.getKey());
+                    buildWoolBorders(player.getMapSegments().get(i), player.getPlayer());
                     continue;
                 }
-                Class<? extends AbstractStructure> first = entry.getValue().get(i - 1).getStructure().getClass();
-                Class<? extends AbstractStructure> second = entry.getValue().get(i).getStructure().getClass();
+                Class<? extends AbstractStructure> first = player.getMapSegments().get(i - 1).getStructure().getClass();
+                Class<? extends AbstractStructure> second = player.getMapSegments().get(i).getStructure().getClass();
 
                 if(first.equals(second)
                         && (first.equals(Base.class) || first.equals(MilitarySchool.class))){
                     continue;
                 }
-                buildWoolBorders(entry.getValue().get(i), entry.getKey());
+                buildWoolBorders(player.getMapSegments().get(i), player.getPlayer());
             }
         }
     }
@@ -628,6 +665,10 @@ public class Game {
         s[X][Z+1].setStructure(school);
         s[X+1][Z+1].setStructure(school);
 
+        s[X+1][Z+1].setOriginX(X+1).setOriginZ(Z+1);
+        s[X+1][Z].setOriginX(X+1).setOriginZ(Z);
+        s[X][Z+1].setOriginX(X).setOriginZ(Z+1);
+
         gamePlayer.getPlayerStructures().addSchoolSegment(s[X][Z]);
         segmentBuilder.buildSegment(s[X][Z]);
         startBorderCheckTask(s[X][Z], player);
@@ -681,7 +722,7 @@ public class Game {
         return new CuboidRegion(weWorld, min, max);
     }
     public List<MapSegment> getSegments(Player player){
-        return playerOwnedSegments.get(player);
+        return getGamePlayer(player).getMapSegments();
     }
     public List<GamePlayer> getGamePlayers(){
         return gamePlayers;

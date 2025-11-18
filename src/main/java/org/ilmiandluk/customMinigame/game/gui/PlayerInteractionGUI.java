@@ -140,7 +140,7 @@ public class PlayerInteractionGUI implements ChestGUI{
         Game game = GameController.getGameWithPlayer(player.getPlayer());
         if(game != null){
             for(Player pl : game.getPlayers()){
-                pl.sendTitle(messageLoader.getString("game.startWarTitle", player, target), "", 0, 40, 0);
+                pl.sendTitle(messageLoader.getString("game.startWarTitle", player), messageLoader.getString("game.startWarSubtitle", target), 0, 40, 0);
             }
         }
         player.addEnemy(target);
@@ -148,7 +148,7 @@ public class PlayerInteractionGUI implements ChestGUI{
     }
     private void sendInvite(){
         TextComponent base = new TextComponent(
-                messageLoader.getString("game.playerSendAlly", player));
+                messageLoader.getString("game.playerSendAllyTitle", player) + messageLoader.getString("game.playerSendAllySubtitle", player));
 
         TextComponent accept = new TextComponent(
                 messageLoader.getString("game.acceptButton"));
@@ -160,7 +160,7 @@ public class PlayerInteractionGUI implements ChestGUI{
 
         target.getPlayer().spigot().sendMessage(base);
         target.addFriendInvite(player);
-        target.getPlayer().sendTitle(messageLoader.getString("game.playerSendAlly", player), "", 0, 40, 0);
+        target.getPlayer().sendTitle(messageLoader.getString("game.playerSendAllyTitle", player), messageLoader.getString("game.playerSendAllySubtitle", player), 0, 40, 0);
 
         player.getPlayer().sendMessage(messageLoader.getString("game.sendAlly", target));
     }
@@ -195,7 +195,7 @@ public class PlayerInteractionGUI implements ChestGUI{
     @Override
     public void closeInventory(Player p) {
         GUIHandler.closeGUI(p);
-        new PlayerListGUI(player).updateInventory();
+        new PlayerListGUI(player).openInventory(p);
     }
 
     @Override

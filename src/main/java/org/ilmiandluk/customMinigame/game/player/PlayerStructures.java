@@ -32,14 +32,12 @@ public class PlayerStructures {
         if(structure instanceof MilitarySchool) militarySchoolCount++;
         if(structure instanceof Mineshaft) mineshaftCount++;
         if(structure instanceof Base) baseCount++;
-        System.out.println("Sawmill count: " + sawmillCount + " militarySchoolCount: " + militarySchoolCount + " baseCount: " + baseCount);
     }
     public void removeStructure(AbstractStructure structure){
         if(structure instanceof Sawmill) sawmillCount--;
         if(structure instanceof MilitarySchool) militarySchoolCount--;
         if(structure instanceof Mineshaft) mineshaftCount--;
         if(structure instanceof Base) baseCount--;
-        System.out.println("Sawmill count: " + sawmillCount + " militarySchoolCount: " + militarySchoolCount + " baseCount: " + baseCount);
     }
     public int getBaseCount(){
         return this.baseCount;

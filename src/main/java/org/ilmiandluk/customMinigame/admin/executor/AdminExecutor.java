@@ -1,22 +1,13 @@
 package org.ilmiandluk.customMinigame.admin.executor;
 
-import net.minecraft.server.level.WorldServer;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_21_R5.CraftWorld;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.Sign;
-import org.ilmiandluk.customMinigame.game.controller.ChunkController;
-import org.ilmiandluk.customMinigame.game.entity.Soldier;
-import org.ilmiandluk.customMinigame.game.enums.GameWoolColors;
-import org.ilmiandluk.customMinigame.game.player.GamePlayer;
 import org.ilmiandluk.customMinigame.game.repository.MapRepository;
 import org.ilmiandluk.customMinigame.game.repository.SignRepository;
 import org.ilmiandluk.customMinigame.game.map.Map;
@@ -56,7 +47,6 @@ public class AdminExecutor implements CommandExecutor {
         return switch (args[0].toLowerCase()) {
             case "createmap" -> handleCreateMap(((Player) sender).getPlayer(), args);
             case "createsign" -> handleCreateSign(((Player) sender).getPlayer(), args);
-            case "generate" -> handleGenerateMap(((Player) sender).getPlayer(), args);
             default -> sendHelpMessage(sender);
         };
     }
@@ -98,22 +88,6 @@ public class AdminExecutor implements CommandExecutor {
             sender.sendMessage(message);
         }
         return false;
-    }
-
-    private boolean handleGenerateMap(@Nullable Player player, @NotNull String @NotNull [] args) {
-        if (args.length < 2) {
-            player.sendMessage(messageManager.getString("admin.generateMapUsage"));
-            return true;
-        }
-        String mapName = args[1];
-        Map thisMap = MapRepository.getMap(mapName);
-        if (thisMap == null) {
-            player.sendMessage(messageManager.getString("admin.mapNotFound"));
-            return true;
-        }
-        thisMap.segmentInitialize();
-        player.sendMessage(messageManager.getString("admin.mapWasGenerated"));
-        return true;
     }
 
     private boolean handleCreateMap(@Nullable Player player, @NotNull String @NotNull [] args) {

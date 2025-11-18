@@ -1,25 +1,17 @@
 package org.ilmiandluk.customMinigame.game.entity;
 
-import net.minecraft.core.BlockPosition;
-import net.minecraft.core.Holder;
 import net.minecraft.server.level.WorldServer;
 import net.minecraft.sounds.SoundEffect;
 import net.minecraft.sounds.SoundEffects;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageSources;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.attributes.GenericAttributes;
 import net.minecraft.world.entity.ai.goal.PathfinderGoalMeleeAttack;
-import net.minecraft.world.entity.ai.goal.PathfinderGoalZombieAttack;
 import net.minecraft.world.entity.ai.goal.target.PathfinderGoalNearestAttackableTarget;
-import net.minecraft.world.entity.animal.EntityIronGolem;
 import net.minecraft.world.entity.monster.EntityZombie;
-import net.minecraft.world.phys.Vec3D;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.craftbukkit.v1_21_R5.CraftWorld;
-import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Zombie;
@@ -28,6 +20,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.ilmiandluk.customMinigame.CustomMinigame;
+import org.ilmiandluk.customMinigame.game.Game;
 import org.ilmiandluk.customMinigame.game.controller.ChunkController;
 import org.ilmiandluk.customMinigame.game.entity.pathfinder.PathFinderMoveToLocation;
 import org.ilmiandluk.customMinigame.game.enums.SoldierRelate;
@@ -48,7 +41,7 @@ public class Soldier extends EntityZombie {
     private SoldierRelate relate;
 
     private SoldierState soldierState;
-
+    private final Game game;
     private static final double attackDamage = 15;
     private static final double attackSpeed = 2.5;
     private static final double moveSpeed = 0.3;
@@ -64,6 +57,16 @@ public class Soldier extends EntityZombie {
     }
 
     public void changeOwner(GamePlayer gamePlayer){
+        if(entity != null){
+            for(GamePlayer player: game.getGamePlayers()) {
+                if(gamePlayer != null) {
+                    gamePlayer.getPlayerResources().addSoldier(this);
+                    player.getPlayerTeam(gamePlayer.getPlayer()).addEntry(entity.getUniqueId().toString());
+                }
+                if(this.gamePlayer != null)
+                    player.getPlayerTeam(this.gamePlayer.getPlayer()).removeEntry(entity.getUniqueId().toString());
+            }
+        }
         this.gamePlayer = gamePlayer;
     }
 
@@ -75,6 +78,7 @@ public class Soldier extends EntityZombie {
         this.chunkController = chunkController;
         this.soldierState = SoldierState.Free;
         this.linkedMapSegment = mapSegment;
+        this.game = gamePlayer.getGame();
         // ci - targetSelector
         // ch - goalSelector
         // S() - getNavigation
@@ -90,15 +94,20 @@ public class Soldier extends EntityZombie {
         entity.getWorld().spawnParticle(Particle.HEART, entity.getLocation(), 5);
     }
     public void doTeleport(){
-        if(currentGoal != null)
-            entity.teleport(currentGoal.getTargetLocation());
+        if(currentGoal != null) {
+            Location teleportLocation = currentGoal.getTargetLocation().clone();
+            teleportLocation.setYaw(entity.getLocation().getYaw());
+            teleportLocation.setPitch(entity.getLocation().getPitch());
+            entity.teleport(teleportLocation);
+            currentGoal.cancel();
+        }
     }
     public void doStrength(){
-        PotionEffect effect = new PotionEffect(PotionEffectType.STRENGTH, 120*20, 2);
+        PotionEffect effect = new PotionEffect(PotionEffectType.STRENGTH, 120*20, 2, true, true);
         ((LivingEntity) entity).addPotionEffect(effect);
     }
     public void doSpeed(){
-        PotionEffect effect = new PotionEffect(PotionEffectType.SPEED, 120*20, 2);
+        PotionEffect effect = new PotionEffect(PotionEffectType.SPEED, 120*20, 2, true, true);
         ((LivingEntity) entity).addPotionEffect(effect);
     }
     public void doRocket(){
@@ -164,7 +173,7 @@ public class Soldier extends EntityZombie {
         this.linkedMapSegment = linkedMapSegment;
     }
 
-    //tryAttack(ServerWorld arg0, Entity arg1)
+    /// tryAttack(ServerWorld arg0, Entity arg1)
     @Override
     public boolean c(WorldServer worldserver, net.minecraft.world.entity.Entity entity) {
         if(entity instanceof Soldier soldier) {
@@ -177,6 +186,7 @@ public class Soldier extends EntityZombie {
         }
         return super.c(worldserver, entity);
     }
+    /// tick()
     @Override
     public void g(){
         super.g();
@@ -254,13 +264,14 @@ public class Soldier extends EntityZombie {
                 }
         ));
     }
-    // die()
+    /// die(DamageSource)
     @Override
     public void a(DamageSource damagesource){
         linkedMapSegment.removeSoldier(this);
 
-        // Забираем одного солдата, отправляем об этом сообщение внутри.
-        gamePlayer.getPlayerResources().removeSoldier(this);
+        if(gamePlayer != null)
+            // Забираем одного солдата, отправляем об этом сообщение внутри.
+            gamePlayer.getPlayerResources().removeSoldier(this);
 
         // Нужно проверить, закончилось ли сражение.
         linkedMapSegment.endBattle();

@@ -1,6 +1,7 @@
 package org.ilmiandluk.customMinigame.util.controler;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.ilmiandluk.customMinigame.util.PlayerInformation;
 
@@ -24,7 +25,7 @@ public class PlayerInformationController {
         }
         player.setInvisible(false);
         player.setFlySpeed(0.5f);
-        player.setAllowFlight(false);
+        player.setAllowFlight(information.getGameMode() != GameMode.ADVENTURE && information.getGameMode() != GameMode.SURVIVAL);
         player.setFlying(false);
         player.setGameMode(information.getGameMode());
         player.getInventory().setContents(information.getPlayerInventory());

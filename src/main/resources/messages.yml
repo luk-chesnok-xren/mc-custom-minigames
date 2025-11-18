@@ -2,7 +2,6 @@ prefix: "&7[&aCustomMinigame&7]"
 admin:
   createMapUsage: "%prefix% &cИспользование: /cmga createmap <name> <maxPlayers> <xSize> <zSize>"
   createSignUsage: "%prefix% &cИспользование: /cmga createsign <name>"
-  generateMapUsage: "%prefix% &cИспользование: /cmga generate <name>"
   viewNotOnSign: "%prefix% &cВы должны смотреть на табличку, используя команду!"
   signWasRemoved: "%prefix% &cВы уничтожили табличку!"
   mapNotFound: "%prefix% &cУказанная карта не найдена!"
@@ -13,7 +12,6 @@ admin:
     - '&6/cmga &8- &7Вывести это сообщение'
     - '&6/cmga createmap <name> <maxPlayers> <xSize> <zSize> &8- &7Создать новую карту'
     - '&6/cmga createsign <name> &8- &7Создать новую табличку для игры'
-    - '&6/cmga generate <name> &8- &7Генерирует карту заново'
     - '&8&m-------------------------------------'
 lobby:
   joinMessage: "%prefix% &a%player%&7 присоединился к лобби [%current_players%/%max_players%]"
@@ -66,9 +64,11 @@ game:
   addSoldier: "%prefix% &aВ вашей армии пополнение на &e%count% &aсолдат."
   deadSoldier: "%prefix% &cВаш солдат только что погиб!"
   notRequestFromPlayer: "%prefix% &cВам не поступало запросов от этого игрока!"
-  playerSendAlly: "%color%%player% &eпригласил вас в союз! "
+  playerSendAllyTitle: "%color%%player% "
+  playerSendAllySubtitle: "&fпригласил вас в союз!"
   sendAlly: "&7Вы отправили приглашение в союз игроку %color%%player%"
-  startWarTitle: "%color%%player% &cобъявил войну %color%%target%"
+  startWarTitle: "%color%%player%"
+  startWarSubtitle: "&fобъявил войну %color%%player%"
   segmentsMustNotMatch: "%prefix% &cВыделенные сегменты не должны совпадать!"
   dislocateSoldiers: "%prefix% &7Солдаты начали перемещение на другой сегмент!"
   dislocateToFriend: "%prefix% &aСолдаты перемещаются к союзнику!"

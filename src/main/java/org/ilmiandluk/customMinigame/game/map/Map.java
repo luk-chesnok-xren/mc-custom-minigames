@@ -5,9 +5,7 @@ import org.bukkit.entity.Player;
 import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.Game;
 import org.ilmiandluk.customMinigame.game.controller.GameController;
-import org.ilmiandluk.customMinigame.game.entity.Soldier;
 import org.ilmiandluk.customMinigame.game.enums.MapGameState;
-import org.ilmiandluk.customMinigame.game.enums.SoldierRelate;
 import org.ilmiandluk.customMinigame.game.player.GamePlayer;
 import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
 import org.ilmiandluk.customMinigame.game.structures.environment.Forest;
@@ -118,7 +116,7 @@ public class Map {
             for (int x = X; x < X+bSize; x++) {
                 for (int z = Z; z < Z+bSize; z++) {
                     Location loc = mapLocation.clone().add(x*20,0,z*20);
-                    segments[x][z] = new MapSegment(new Base(), loc, player, x, z);
+                    segments[x][z] = new MapSegment(new Base(), loc, player, x, z, x-X, z-Z);
                     game.addSegmentToPlayerFromMap(segments[x][z], player);
                 }
             }

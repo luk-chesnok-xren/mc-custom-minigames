@@ -8,6 +8,7 @@ import org.ilmiandluk.customMinigame.CustomMinigame;
 import org.ilmiandluk.customMinigame.game.entity.Soldier;
 import org.ilmiandluk.customMinigame.game.enums.SoldierRelate;
 import org.ilmiandluk.customMinigame.game.enums.SoldierState;
+import org.ilmiandluk.customMinigame.game.structures.builds.Base;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 
 public class PathFinderMoveToLocation extends PathfinderGoal {
@@ -67,14 +68,17 @@ public class PathFinderMoveToLocation extends PathfinderGoal {
         // Если ближе чем 1.73 блок (√5). ИМХО, регистрация странная
         // поэтому так много. Лучше пусть он не дойдет на 1-2 блока, но
         // pathfinder выполнится, чем он остановиться и не дойдет.
-        if (distanceSquared < 5) {
+        if (distanceSquared < 6) {
             reached = true;
             if(entity instanceof Soldier soldier){
                 soldier.setSoldierState(SoldierState.Free);
                 if(soldier.getRelate() == SoldierRelate.ENEMY) {
                     if(!soldier.getLinkedMapSegment().checkFight()) {
                         if(!soldier.getLinkedMapSegment().isCatch()) {
-                            soldier.getGamePlayer().getPlayer().sendMessage(messageLoader.getString("game.catchSegment", configLoader.getInt("game.timeToCatchSegment")));
+                            if(soldier.getLinkedMapSegment().getStructure() instanceof Base)
+                                soldier.getGamePlayer().getPlayer().sendMessage(messageLoader.getString("game.catchSegment", configLoader.getInt("game.timeToCatchBase")));
+                            else
+                                soldier.getGamePlayer().getPlayer().sendMessage(messageLoader.getString("game.catchSegment", configLoader.getInt("game.timeToCatchSegment")));
                             soldier.getLinkedMapSegment().catchSegment();
                         }
                     }

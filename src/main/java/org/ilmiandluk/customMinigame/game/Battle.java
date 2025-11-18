@@ -39,10 +39,11 @@ public class Battle {
             friend.getPlayer().sendMessage(messageLoader.getString("game.loseOnSegment"));
 
         enemy.getPlayer().sendMessage(messageLoader.getString("game.winOnSegment"));
-        if(mapSegment.getStructure() instanceof Base)
+        if(mapSegment.getStructure() instanceof Base) {
             enemy.getPlayer().sendMessage(messageLoader.getString("game.catchSegment", configLoader.getInt("game.timeToCatchBase")));
-        else
+        } else {
             enemy.getPlayer().sendMessage(messageLoader.getString("game.catchSegment", configLoader.getInt("game.timeToCatchSegment")));
+        }
         mapSegment.catchSegment();
     }
 }

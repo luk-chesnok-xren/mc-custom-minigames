@@ -37,19 +37,26 @@ public class PlayerListGUI implements ChestGUI{
 
     @Override
     public void initializeItems(Inventory inv) {
-        ItemStack itemStack =  new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta itemMeta = (SkullMeta) itemStack.getItemMeta();
         Game game = GameController.getGameWithPlayer(player.getPlayer());
         if(game != null){
             List<GamePlayer> gamePlayers = game.getGamePlayersWithout(player);
             for(int i = 0; i < gamePlayers.size(); i++) {
                 GamePlayer gamePlayer = gamePlayers.get(i);
-                itemMeta.setOwningPlayer(gamePlayer.getPlayer());
-                itemMeta.setDisplayName(gamePlayer.replacePlaceholders(messageLoader.getString("game.playerListGUI.headName")));
-                List<String> lore = gamePlayer.replacePlaceholders(messageLoader.getStringList("game.playerListGUI.headLore"), player);
-                itemMeta.setLore(lore);
-                itemStack.setItemMeta(itemMeta);
-                inv.setItem(i+9, itemStack);
+                ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+                SkullMeta meta = (SkullMeta) head.getItemMeta();
+                meta.setOwningPlayer(gamePlayer.getPlayer());
+                meta.setDisplayName(gamePlayer.replacePlaceholders(
+                        messageLoader.getString("game.playerListGUI.headName")
+                ));
+
+                List<String> lore = gamePlayer.replacePlaceholders(
+                        messageLoader.getStringList("game.playerListGUI.headLore"),
+                        player
+                );
+                meta.setLore(lore);
+                head.setItemMeta(meta);
+
+                inv.setItem(i+9, head);
             }
         }
     }

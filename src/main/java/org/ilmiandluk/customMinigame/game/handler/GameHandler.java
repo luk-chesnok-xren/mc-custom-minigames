@@ -23,9 +23,6 @@ import org.ilmiandluk.customMinigame.game.player.GamePlayer;
 import org.ilmiandluk.customMinigame.game.player.HandledSegment;
 import org.ilmiandluk.customMinigame.util.ConfigurationManager;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 public class GameHandler  {
@@ -103,6 +100,7 @@ public class GameHandler  {
                     player.sendMessage(messageLoader.getString("game.abilitySuccessful"));
                 }else
                     player.sendMessage(messageLoader.getString("game.abilityError"));
+                event.setCancelled(true);
             }
             if(event.hasItem() && event.getItem().getType() == Material.FEATHER) {
                 if(game.speedAbility(gamePlayer)) {
@@ -110,7 +108,7 @@ public class GameHandler  {
                     player.sendMessage(messageLoader.getString("game.abilitySuccessful"));
                 }else
                     player.sendMessage(messageLoader.getString("game.abilityError"));
-
+                event.setCancelled(true);
             }
             if(event.hasItem() && event.getItem().getType() == Material.ENCHANTED_GOLDEN_APPLE) {
                 RayTraceResult result = player.rayTraceBlocks(250.0);
@@ -120,6 +118,7 @@ public class GameHandler  {
                         player.sendMessage(messageLoader.getString("game.abilitySuccessful"));
                     }else
                         player.sendMessage(messageLoader.getString("game.abilityError"));
+                    event.setCancelled(true);
                 }
             }
             if(event.hasItem() && event.getItem().getType() == Material.RECOVERY_COMPASS) {
@@ -130,6 +129,7 @@ public class GameHandler  {
                         player.sendMessage(messageLoader.getString("game.abilitySuccessful"));
                     }else
                         player.sendMessage(messageLoader.getString("game.abilityError"));
+                    event.setCancelled(true);
                 }
             }
             if(event.hasItem() && event.getItem().getType() == Material.FIREWORK_ROCKET) {
@@ -140,6 +140,7 @@ public class GameHandler  {
                         player.sendMessage(messageLoader.getString("game.abilitySuccessful"));
                     }else
                         player.sendMessage(messageLoader.getString("game.abilityError"));
+                    event.setCancelled(true);
                 }
             }
             if(event.hasItem() && event.getItem().getType() == Material.ENDER_PEARL) {
@@ -148,6 +149,7 @@ public class GameHandler  {
                     player.sendMessage(messageLoader.getString("game.abilitySuccessful"));
                 }else
                     player.sendMessage(messageLoader.getString("game.abilityError"));
+                event.setCancelled(true);
                 }
         }
     }

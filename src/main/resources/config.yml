@@ -12,16 +12,16 @@ lobby:
 game:
   moneyChargeCoefficient: 1.5
   populationGrowthGuaranteed: 1
-  populationGrowthCoefficient: 0.15
+  populationGrowthCoefficient: 0.1
   soldiersPerPayday: 1
   payDayTime: 60
   soldiersToExplore: 2
   timeToCatchSegment: 20
   timeToCatchBase: 60
-  healAbilityItemCost: 200
+  healAbilityItemCost: 5000
   speedAbilityItemCost: 500
   strengthAbilityItemCost: 1000
-  teleportAbilityItemCost: 5000
+  teleportAbilityItemCost: 3000
   rocketAbilityItemCost: 5000
   nuclearAbilityItemCost: 30000
   startPlayerResources:
@@ -38,8 +38,8 @@ game:
       origin: 0
       bound: 2
     people:
-      origin: 6
-      bound: 8
+      origin: 30
+      bound: 35
     soldiers:
       origin: 3
       bound: 4
