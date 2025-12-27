@@ -1,0 +1,82 @@
+structure:
+  base: "structures/base.schem"
+  militaryschool: "structures/militaryschool.schem"
+  mineshaft: "structures/mineshaft.schem"
+  sawmill: "structures/sawmill.schem"
+  plain: "structures/plain.schem"
+  forest: "structures/forest.schem"
+  hills: "structures/hills.schem"
+lobby:
+  startTimer: 20
+  minPlayersToStart: 2
+game:
+  moneyChargeCoefficient: 1.5
+  populationGrowthGuaranteed: 1
+  populationGrowthCoefficient: 0.1
+  soldiersPerPayday: 1
+  payDayTime: 60
+  soldiersToExplore: 2
+  timeToCatchSegment: 20
+  timeToCatchBase: 60
+  healAbilityItemCost: 5000
+  speedAbilityItemCost: 500
+  strengthAbilityItemCost: 1000
+  teleportAbilityItemCost: 3000
+  rocketAbilityItemCost: 5000
+  nuclearAbilityItemCost: 30000
+  startPlayerResources:
+    wood:
+      origin: 20
+      bound: 30
+    stone:
+      origin: 20
+      bound: 30
+    iron:
+      origin: 20
+      bound: 30
+    precious:
+      origin: 0
+      bound: 2
+    people:
+      origin: 30
+      bound: 35
+    soldiers:
+      origin: 3
+      bound: 4
+    money:
+      origin: 100
+      bound: 150
+
+  militarySchoolBuildResources:
+    stone: 10
+    iron: 10
+    wood: 20
+    money: 50
+
+  sawmillBuildResources:
+    stone: 5
+    iron: 3
+    wood: 8
+    money: 25
+
+  mineshaftBuildResources:
+    stone: 8
+    iron: 5
+    wood: 6
+    money: 25
+
+  mineshaftProvides:
+    stone:
+      origin: 4
+      bound: 8
+    iron:
+      origin: 2
+      bound: 5
+    precious:
+      origin: 0
+      bound: 2
+
+  sawmillProvides:
+    wood:
+      origin: 3
+      bound: 6

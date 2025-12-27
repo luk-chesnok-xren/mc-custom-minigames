@@ -1,0 +1,13 @@
+name: CustomMinigame
+version: '1.0-SNAPSHOT'
+main: org.ilmiandluk.customMinigame.CustomMinigame
+api-version: '1.21'
+depend: [FastAsyncWorldEdit]
+author: IlmiZeroth, luk-chesnok
+load: POSTWORLD
+commands:
+  cmga:
+    description: Plugin command for admins
+    permission: cmg.admin
+  cmg:
+    description: Hidden command for players

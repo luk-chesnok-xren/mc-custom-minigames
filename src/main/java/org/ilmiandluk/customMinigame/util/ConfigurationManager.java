@@ -1,0 +1,225 @@
+package org.ilmiandluk.customMinigame.util;
+
+import net.md_5.bungee.api.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.ilmiandluk.customMinigame.game.enums.Resources;
+import org.ilmiandluk.customMinigame.game.player.GamePlayer;
+import org.ilmiandluk.customMinigame.game.structures.AbstractStructure;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+
+public class ConfigurationManager {
+    private final JavaPlugin plugin;
+    private File configFile;
+    private FileConfiguration config;
+    private final String fileName;
+    private final File structuresFolder;
+
+    public ConfigurationManager(JavaPlugin plugin, String fileName) {
+        this.plugin = plugin;
+        this.fileName = fileName;
+        this.configFile = new File(plugin.getDataFolder(), fileName);
+        this.structuresFolder = new File(plugin.getDataFolder(), "structures");
+        reloadConfig();
+    }
+
+    public void reloadConfig() {
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdirs();
+        }
+
+        if (!configFile.exists()) {
+            saveDefaultConfig();
+        }
+
+        config = YamlConfiguration.loadConfiguration(configFile);
+
+        setupStructuresFolder();
+    }
+
+    public FileConfiguration getConfig() {
+        if (config == null) {
+            reloadConfig();
+        }
+        return config;
+    }
+
+    public void saveConfig() {
+        if (config == null || configFile == null) {
+            return;
+        }
+
+        try {
+            getConfig().save(configFile);
+        } catch (IOException ex) {
+            plugin.getLogger().log(Level.SEVERE, "Could not save config to " + configFile, ex);
+        }
+    }
+
+    public void saveDefaultConfig() {
+        if (!configFile.exists()) {
+            plugin.saveResource(fileName, false);
+        }
+    }
+    private static String replacePlaceholders(String text, int currentPlayers, int maxPlayers){
+        return text != null ? text.
+                replaceAll("%current_players%", String.valueOf(currentPlayers)).
+                replaceAll("%max_players%", String.valueOf(maxPlayers)): null;
+    }
+    private static String replacePlaceholders(String text, String player) {
+        return text != null ? text.replaceAll("%player%", player): null;
+    }
+    private static String replacePlaceholders(String text, String player1, String player2) {
+        return text != null ? text.
+                replaceAll("%player1%", player1).
+                replaceAll("%player2%", player2): null;
+    }
+    private String replacePlaceholders(String text){
+        return text != null ? text.
+                replaceAll("%prefix%", getConfig().getString("prefix")): null;
+    }
+    private String replacePlaceholders(String text, int num){
+        return text != null ? text.
+                replaceAll("%seconds%", String.valueOf(num))
+                .replaceAll("%count%", String.valueOf(num)): null;
+    }
+    private String replacePlaceholders(String text, GamePlayer gamePlayer){
+        return text != null ? text.
+                replaceAll("%player%", gamePlayer.getPlayer().getName()).
+                replaceAll("%color%", gamePlayer.getColor().getColorString()): null;
+    }
+    private String replacePlaceholders(String text, GamePlayer gamePlayer, GamePlayer target){
+        return text != null ? text.
+                replaceAll("%color%%player%",
+                        gamePlayer.getColor().getColorString()
+                                +gamePlayer.getPlayer().getName()).
+                replaceAll("%color%%target%",
+                        target.getColor().getColorString()
+                                +target.getPlayer().getName())
+                .replaceAll("%player%", gamePlayer.getPlayer().getName())
+                .replaceAll("%target%", target.getPlayer().getName()): null;
+    }
+    private String replaceResources(String text, Map<Resources, Integer> resourcesIntegerMap){
+        StringBuilder result = new StringBuilder();
+        for(Resources resource: resourcesIntegerMap.keySet()){
+            result.append(resource.getConfigName()).append(" X ").append(resourcesIntegerMap.get(resource)).append(", ");
+        }
+        result.delete(result.length()-2, result.length());
+        return text.replaceAll("%resources%", result.toString());
+    }
+    private String translateColors(String text) {
+        return text != null ? ChatColor.translateAlternateColorCodes('&', text) : null;
+    }
+    public void setupStructuresFolder() {
+        if (!structuresFolder.exists()) {
+            structuresFolder.mkdirs();
+            plugin.getLogger().info("Created structures folder");
+        }
+    }
+
+    synchronized private void copyStructureIfMissing(String schemFileName) {
+        File schemFile = new File(structuresFolder, schemFileName);
+
+        if (!schemFile.exists()) {
+            try {
+                InputStream inputStream = plugin.getResource("structures/" + schemFileName);
+
+                if (inputStream != null) {
+                    Files.copy(inputStream, schemFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    plugin.getLogger().info("Copied default structure: " + schemFileName);
+                } else {
+                    plugin.getLogger().warning("Structure file not found in resources: structures/" + schemFileName);
+                }
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not copy structure file: " + schemFileName, e);
+            }
+        }
+    }
+
+    public File getStructureFile(String structureName) {
+        return new File(structuresFolder, structureName + ".schem");
+    }
+
+    public boolean structureExists(String structureName) {
+        return getStructureFile(structureName).exists();
+    }
+
+    public ConfigurationSection getConfigurationSection(String path) {
+        return getConfig().getConfigurationSection(path);
+    }
+
+    public String getString(String path) {
+        return translateColors(replacePlaceholders(getConfig().getString(path, path + " not found")));
+    }
+    public String getString(String path, Map<Resources, Integer> resourcesIntegerMap) {
+        return replaceResources(translateColors(replacePlaceholders(getConfig().getString(path, path + " not found"))), resourcesIntegerMap);
+    }
+    public String getString(String path, String defaultValue) {
+        return translateColors(replacePlaceholders(getConfig().getString(path, defaultValue)));
+    }
+    public String getString(String path, GamePlayer gamePlayer) {
+        return replacePlaceholders(getString(path), gamePlayer);
+    }
+    public String getString(String path, GamePlayer gamePlayer, GamePlayer target) {
+        return replacePlaceholders(getString(path), gamePlayer, target);
+    }
+    public String getString(String path, Player player){
+        return replacePlaceholders(getString(path), player.getName());
+    }
+    public String getString(String path, Player player1, Player player2) {
+        return replacePlaceholders(getString(path), player1.getName(), player2.getName());
+    }
+    public String getString(String path, int seconds){
+        return replacePlaceholders(getString(path), seconds);
+    }
+    public String getString(String path, Player player, int currentPlayers, int maxPlayers) {
+        return replacePlaceholders(getString(path, player), currentPlayers, maxPlayers);
+    }
+
+    public List<String> getStringList(String path) {
+        return getConfig().getStringList(path).stream()
+                .map(this::replacePlaceholders)
+                .map(this::translateColors)
+                .collect(Collectors.toList());
+    }
+    public int getInt(String path) {
+        return getConfig().getInt(path);
+    }
+
+    public int getInt(String path, int defaultValue) {
+        return getConfig().getInt(path, defaultValue);
+    }
+    public double getDouble(String path) {
+        return getConfig().getDouble(path);
+    }
+
+    public double getDouble(String path, double defaultValue) {
+        return getConfig().getDouble(path, defaultValue);
+    }
+
+    public boolean getBoolean(String path) {
+        return getConfig().getBoolean(path);
+    }
+
+    public boolean getBoolean(String path, boolean defaultValue) {
+        return getConfig().getBoolean(path, defaultValue);
+    }
+    // Немного полиморфизма и говнокода?
+    public String getStructurePath(AbstractStructure structure) {
+        String structure_name = structure.getClass().getSimpleName().toLowerCase();
+        copyStructureIfMissing(structure_name+".schem");
+        return getString("structure." + structure_name);
+    }
+}
